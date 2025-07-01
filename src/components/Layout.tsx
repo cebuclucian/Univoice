@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Brain, User, LogOut, Settings, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -9,6 +9,7 @@ export const Layout: React.FC = () => {
   const { user, signOut, loading } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -30,6 +31,7 @@ export const Layout: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/'); // Redirect to home page after logout
   };
 
   return (
