@@ -17,18 +17,15 @@ interface BrandProfile {
   brand_name: string;
   brand_description: string;
   personality_traits: string[];
-  tone_attributes: string[];
+  communication_tones: string[];
   created_at: string;
 }
 
 interface MarketingPlan {
   id: string;
   title: string;
-  objective: string;
-  status: string;
+  details: any;
   created_at: string;
-  duration_weeks: number;
-  selected_channels: string[];
 }
 
 interface Notification {
@@ -102,8 +99,7 @@ export const Dashboard: React.FC = () => {
         const { data: brandData, error: brandError } = await supabase
           .from('brand_profiles')
           .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+          .eq('user_id', user.id);
 
         if (brandData && brandData.length > 0 && !brandError) {
           setBrandProfile(brandData[0]);
@@ -161,8 +157,8 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  const activePlans = marketingPlans.filter(p => p.status === 'active').length;
-  const draftPlans = marketingPlans.filter(p => p.status === 'draft').length;
+  const activePlans = marketingPlans.length;
+  const draftPlans = 0; // Mock data since we don't have status field
   const contentGenerated = 24; // Mock data
   const daysUntilNext = 3; // Mock data
 
@@ -512,7 +508,7 @@ export const Dashboard: React.FC = () => {
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-2 text-sm">Ton:</h4>
                     <div className="flex flex-wrap gap-1">
-                      {brandProfile.tone_attributes?.slice(0, 2).map((tone, index) => (
+                      {brandProfile.communication_tones?.slice(0, 2).map((tone, index) => (
                         <span 
                           key={index} 
                           className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
@@ -520,9 +516,9 @@ export const Dashboard: React.FC = () => {
                           {t(`toneAttributes.${tone}`)}
                         </span>
                       ))}
-                      {brandProfile.tone_attributes?.length > 2 && (
+                      {brandProfile.communication_tones?.length > 2 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          +{brandProfile.tone_attributes.length - 2}
+                          +{brandProfile.communication_tones.length - 2}
                         </span>
                       )}
                     </div>
@@ -625,25 +621,19 @@ export const Dashboard: React.FC = () => {
                       <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                         {plan.title}
                       </h3>
-                      <p className="text-gray-600 text-sm mt-1 line-clamp-1">{plan.objective}</p>
+                      <p className="text-gray-600 text-sm mt-1 line-clamp-1">
+                        {plan.details?.objective || 'Plan de marketing'}
+                      </p>
                       
                       <div className="flex items-center space-x-3 mt-2">
                         <span className="text-xs text-gray-500">
                           {new Date(plan.created_at).toLocaleDateString('ro-RO')}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          {plan.duration_weeks} săpt.
-                        </span>
                       </div>
                     </div>
                     
-                    <span className={`
-                      px-2 py-1 text-xs font-medium rounded-full ml-3
-                      ${plan.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        plan.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-gray-100 text-gray-800'}
-                    `}>
-                      {t(`dashboard.${plan.status}`)}
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 ml-3">
+                      Activ
                     </span>
                   </div>
                 </Card>

@@ -48,8 +48,7 @@ export const Onboarding: React.FC = () => {
         const { data, error } = await supabase
           .from('brand_profiles')
           .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+          .eq('user_id', user.id);
 
         if (data && data.length > 0 && !error) {
           setHasExistingProfile(true);
@@ -57,11 +56,11 @@ export const Onboarding: React.FC = () => {
           setFormData({
             brandName: profile.brand_name || '',
             brandDescription: profile.brand_description || '',
-            sampleText1: profile.sample_texts?.[0] || '',
-            sampleText2: profile.sample_texts?.[1] || '',
-            sampleText3: profile.sample_texts?.[2] || '',
+            sampleText1: profile.content_example_1 || '',
+            sampleText2: profile.content_example_2 || '',
+            sampleText3: '',
             selectedPersonality: profile.personality_traits || [],
-            selectedTone: profile.tone_attributes || [],
+            selectedTone: profile.communication_tones || [],
           });
         }
       } catch (error) {
@@ -109,24 +108,18 @@ export const Onboarding: React.FC = () => {
 
     setLoading(true);
     try {
-      const sampleTexts = [
-        formData.sampleText1,
-        formData.sampleText2,
-        formData.sampleText3
-      ].filter(text => text.trim() !== '');
-
       if (hasExistingProfile) {
         const { error } = await supabase
           .from('brand_profiles')
           .update({
             brand_name: formData.brandName,
             brand_description: formData.brandDescription,
-            sample_texts: sampleTexts,
+            content_example_1: formData.sampleText1,
+            content_example_2: formData.sampleText2 || null,
             personality_traits: formData.selectedPersonality,
-            tone_attributes: formData.selectedTone,
+            communication_tones: formData.selectedTone,
           })
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+          .eq('user_id', user.id);
 
         if (error) throw error;
       } else {
@@ -136,9 +129,10 @@ export const Onboarding: React.FC = () => {
             user_id: user.id,
             brand_name: formData.brandName,
             brand_description: formData.brandDescription,
-            sample_texts: sampleTexts,
+            content_example_1: formData.sampleText1,
+            content_example_2: formData.sampleText2 || null,
             personality_traits: formData.selectedPersonality,
-            tone_attributes: formData.selectedTone,
+            communication_tones: formData.selectedTone,
           });
 
         if (error) throw error;

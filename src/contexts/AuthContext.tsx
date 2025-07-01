@@ -60,10 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const createProfile = async (user: User) => {
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .upsert({
         id: user.id,
-        email: user.email!,
+        full_name: user.email!,
       }, {
         onConflict: 'id'
       });
@@ -82,12 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!error && data.user) {
       // Update profile with additional info
       await supabase
-        .from('profiles')
+        .from('user_profiles')
         .upsert({
           id: data.user.id,
-          email: data.user.email!,
           full_name: fullName,
-          business_name: businessName || null,
         });
     }
 
