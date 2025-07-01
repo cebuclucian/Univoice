@@ -7,20 +7,40 @@ import { Dashboard } from './pages/Dashboard';
 import { Onboarding } from './pages/Onboarding';
 import { Account } from './pages/Account';
 import { Home } from './pages/Home';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { PublicRoute } from './components/PublicRoute';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/app" element={<Layout />}>
+          {/* Public routes - only for non-authenticated users */}
+          <Route path="/" element={
+            <PublicRoute>
+              <Home />
+            </PublicRoute>
+          } />
+          <Route path="/auth" element={
+            <PublicRoute>
+              <Auth />
+            </PublicRoute>
+          } />
+          
+          {/* Protected routes - only for authenticated users */}
+          <Route path="/app" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
             <Route index element={<Navigate to="/app/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="onboarding" element={<Onboarding />} />
             <Route path="account" element={<Account />} />
           </Route>
+          
+          {/* Catch all route - redirect based on auth status */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
