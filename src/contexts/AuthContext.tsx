@@ -47,31 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Ensure loading is false after any auth state change
         setLoading(false);
-
-        // Create or update profile when user signs up
-        if (event === 'SIGNED_UP' && session?.user) {
-          await createProfile(session.user);
-        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const createProfile = async (user: User) => {
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        id: user.id,
-        full_name: user.email!,
-      }, {
-        onConflict: 'id'
-      });
-
-    if (error) {
-      console.error('Error creating profile:', error);
-    }
-  };
 
   const signUp = async (email: string, password: string, fullName: string, businessName?: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -79,16 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
 
-    if (!error && data.user) {
-      // Update profile with additional info
-      await supabase
-        .from('user_profiles')
-        .upsert({
-          id: data.user.id,
-          full_name: fullName,
-        });
-    }
-
+    // Nu mai creăm manual profilul - trigger-ul din backend se ocupă de asta
     return { data, error };
   };
 
