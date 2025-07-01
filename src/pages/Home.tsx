@@ -23,8 +23,8 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl group-hover:scale-105 transition-transform duration-200">
-                <Brain className="h-8 w-8 text-white" />
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl group-hover:scale-105 transition-transform duration-200 animate-icon-glow">
+                <Brain className="h-8 w-8 text-white animate-icon-pulse" />
               </div>
               <span className="font-bold text-2xl text-gray-900">Univoice</span>
             </Link>
@@ -71,9 +71,9 @@ export const Home: React.FC = () => {
             <div className="animate-fade-in-up animate-stagger-2">
               <Link to="/auth">
                 <Button size="lg" className="text-lg px-12 py-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                  <Sparkles className="h-6 w-6 mr-3" />
+                  <Sparkles className="h-6 w-6 mr-3 animate-icon-float" />
                   Definește-ți Vocea Gratuit
-                  <ArrowRight className="h-6 w-6 ml-3" />
+                  <ArrowRight className="h-6 w-6 ml-3 icon-hover-bounce" />
                 </Button>
               </Link>
             </div>
@@ -98,8 +98,8 @@ export const Home: React.FC = () => {
               delay={1}
               hover="subtle"
             >
-              <div className="p-4 bg-red-100 rounded-2xl mb-6 inline-block">
-                <MessageSquare className="h-12 w-12 text-red-600" />
+              <div className="p-4 bg-red-100 rounded-2xl mb-6 inline-block animate-icon-glow icon-hover-shake">
+                <MessageSquare className="h-12 w-12 text-red-600 animate-icon-bounce" />
               </div>
               <p className="text-gray-700 text-lg leading-relaxed">
                 Nu mai știi ce să postezi? Petreci ore căutând idei și totul sună la fel ca pe ChatGPT?
@@ -113,8 +113,8 @@ export const Home: React.FC = () => {
               delay={2}
               hover="subtle"
             >
-              <div className="p-4 bg-yellow-100 rounded-2xl mb-6 inline-block">
-                <Users className="h-12 w-12 text-yellow-600" />
+              <div className="p-4 bg-yellow-100 rounded-2xl mb-6 inline-block animate-icon-glow icon-hover-pulse">
+                <Users className="h-12 w-12 text-yellow-600 animate-icon-float" />
               </div>
               <p className="text-gray-700 text-lg leading-relaxed">
                 Simți că vocea ta se pierde? Conținutul tău nu reflectă pasiunea din spatele afacerii tale?
@@ -128,8 +128,8 @@ export const Home: React.FC = () => {
               delay={3}
               hover="subtle"
             >
-              <div className="p-4 bg-blue-100 rounded-2xl mb-6 inline-block">
-                <TrendingUp className="h-12 w-12 text-blue-600" />
+              <div className="p-4 bg-blue-100 rounded-2xl mb-6 inline-block animate-icon-glow icon-hover-float">
+                <TrendingUp className="h-12 w-12 text-blue-600 animate-icon-pulse" />
               </div>
               <p className="text-gray-700 text-lg leading-relaxed">
                 Postezi constant dar vânzările nu cresc? E greu să transformi efortul în clienți reali?
@@ -155,8 +155,8 @@ export const Home: React.FC = () => {
                 padding="lg"
                 hover="scale"
               >
-                <div className="p-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl mb-8 inline-block">
-                  <Target className="h-16 w-16 text-blue-600" />
+                <div className="p-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl mb-8 inline-block animate-icon-glow icon-hover-bounce">
+                  <Target className="h-16 w-16 text-blue-600 animate-icon-pulse" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">1. Definește</h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
@@ -171,8 +171,8 @@ export const Home: React.FC = () => {
                 padding="lg"
                 hover="scale"
               >
-                <div className="p-6 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl mb-8 inline-block">
-                  <Zap className="h-16 w-16 text-purple-600" />
+                <div className="p-6 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl mb-8 inline-block animate-icon-glow icon-hover-shake">
+                  <Zap className="h-16 w-16 text-purple-600 animate-icon-bounce" style={{ animationDelay: '0.5s' }} />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">2. Generează</h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
@@ -187,8 +187,8 @@ export const Home: React.FC = () => {
                 padding="lg"
                 hover="scale"
               >
-                <div className="p-6 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl mb-8 inline-block">
-                  <TrendingUp className="h-16 w-16 text-green-600" />
+                <div className="p-6 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl mb-8 inline-block animate-icon-glow icon-hover-float">
+                  <TrendingUp className="h-16 w-16 text-green-600 animate-icon-float" style={{ animationDelay: '1s' }} />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">3. Crește</h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
@@ -218,9 +218,9 @@ export const Home: React.FC = () => {
                 size="lg" 
                 className="text-lg px-12 py-4 bg-white text-blue-600 border-white hover:bg-gray-50 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
-                <CheckCircle className="h-6 w-6 mr-3" />
+                <CheckCircle className="h-6 w-6 mr-3 animate-icon-pulse" />
                 Creează Cont și Voce Gratuit
-                <ArrowRight className="h-6 w-6 ml-3" />
+                <ArrowRight className="h-6 w-6 ml-3 icon-hover-bounce" />
               </Button>
             </Link>
           </div>
@@ -232,8 +232,8 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-8 lg:mb-0">
-              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl">
-                <Brain className="h-8 w-8 text-white" />
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl animate-icon-glow">
+                <Brain className="h-8 w-8 text-white animate-icon-rotate" />
               </div>
               <span className="font-bold text-2xl">Univoice</span>
             </div>
