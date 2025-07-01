@@ -9,6 +9,7 @@ interface PublicRouteProps {
 export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
+  // Show loading spinner while checking auth state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -22,5 +23,6 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     return <Navigate to="/app/dashboard" replace />;
   }
 
+  // If no user (logged out or never logged in), show the public content
   return <>{children}</>;
 };
