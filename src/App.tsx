@@ -6,6 +6,7 @@ import { Auth } from './pages/Auth';
 import { Dashboard } from './pages/Dashboard';
 import { Onboarding } from './pages/Onboarding';
 import { Account } from './pages/Account';
+import { MarketingPlans } from './pages/MarketingPlans';
 import { Home } from './pages/Home';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
@@ -43,6 +44,7 @@ function App() {
             <Route index element={<Navigate to="/app/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="onboarding" element={<Onboarding />} />
+            <Route path="plans" element={<MarketingPlans />} />
             <Route path="account" element={<Account />} />
           </Route>
           

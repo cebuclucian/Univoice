@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { Brain, User, LogOut, Settings, BarChart3 } from 'lucide-react';
+import { Brain, User, LogOut, Settings, BarChart3, Target } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { Button } from './ui/Button';
@@ -25,6 +25,7 @@ export const Layout: React.FC = () => {
 
   const navigation = [
     { name: t('nav.dashboard'), href: '/app/dashboard', icon: BarChart3 },
+    { name: 'Planuri Marketing', href: '/app/plans', icon: Target },
     { name: t('nav.brandVoice'), href: '/app/onboarding', icon: User },
     { name: t('nav.account'), href: '/app/account', icon: Settings },
   ];
