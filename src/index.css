@@ -21,234 +21,6 @@
   }
 }
 
-/* Custom animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-  70% {
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* NEW: Icon animations for Home page */
-@keyframes iconFloat {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes iconPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-@keyframes iconRotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes iconBounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-6px);
-  }
-  60% {
-    transform: translateY(-3px);
-  }
-}
-
-@keyframes iconGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-  }
-}
-
-@keyframes iconShake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
-  }
-}
-
-/* Animation classes */
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.5s ease-out;
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.5s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.4s ease-out;
-}
-
-.animate-bounce-in {
-  animation: bounceIn 0.6s ease-out;
-}
-
-.animate-pulse-soft {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* NEW: Icon animation classes */
-.animate-icon-float {
-  animation: iconFloat 3s ease-in-out infinite;
-}
-
-.animate-icon-pulse {
-  animation: iconPulse 2s ease-in-out infinite;
-}
-
-.animate-icon-rotate {
-  animation: iconRotate 8s linear infinite;
-}
-
-.animate-icon-bounce {
-  animation: iconBounce 2s ease-in-out infinite;
-}
-
-.animate-icon-glow {
-  animation: iconGlow 2.5s ease-in-out infinite;
-}
-
-.animate-icon-shake {
-  animation: iconShake 0.5s ease-in-out;
-}
-
-/* Hover animations for icons */
-.icon-hover-float:hover {
-  animation: iconFloat 0.6s ease-in-out;
-}
-
-.icon-hover-pulse:hover {
-  animation: iconPulse 0.6s ease-in-out;
-}
-
-.icon-hover-bounce:hover {
-  animation: iconBounce 0.8s ease-in-out;
-}
-
-.icon-hover-shake:hover {
-  animation: iconShake 0.5s ease-in-out;
-}
-
 /* Staggered animations */
 .animate-stagger-1 {
   animation-delay: 0.1s;
@@ -302,7 +74,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
-/* Subtle Button hover effects - UPDATED */
+/* Subtle Button hover effects */
 .btn-hover {
   transition: all 0.15s ease-out;
 }
@@ -312,12 +84,21 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Skeleton loading */
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
+/* Hover animations for icons */
+.icon-hover-float:hover {
+  animation: iconFloat 0.6s ease-in-out;
+}
+
+.icon-hover-pulse:hover {
+  animation: iconPulse 0.6s ease-in-out;
+}
+
+.icon-hover-bounce:hover {
+  animation: iconBounce 0.8s ease-in-out;
+}
+
+.icon-hover-shake:hover {
+  animation: iconShake 0.5s ease-in-out;
 }
 
 /* Custom scrollbar */
@@ -344,26 +125,6 @@
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
 
-/* Gradient backgrounds */
-.gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-bg-light {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-.gradient-bg-warm {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-}
-
-/* Glass morphism effect */
-.glass {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
 /* Interactive elements */
 .interactive-element {
   transition: all 0.2s ease-in-out;
@@ -380,7 +141,7 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Micro-interactions - UPDATED for subtlety */
+/* Micro-interactions */
 .micro-bounce:hover {
   animation: none;
   transform: translateY(-1px);
