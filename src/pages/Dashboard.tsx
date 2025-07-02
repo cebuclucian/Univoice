@@ -486,8 +486,8 @@ export const Dashboard: React.FC = () => {
           )}
         </Card>
 
-        {/* Brand Voice History */}
-        <BrandVoiceHistory />
+        {/* Brand Voice History - Enhanced with evolution analytics */}
+        <BrandVoiceHistory showEvolution={brandProfile !== null} />
       </div>
 
       {/* Marketing Plans and AI Recommendations */}
