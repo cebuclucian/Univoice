@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, TrendingUp, AlertCircle, CheckCircle, Lightbulb, Target, Zap, Star } from 'lucide-react';
+import { Brain, TrendingUp, AlertCircle, CheckCircle, Lightbulb, Target, Zap, Star, Wand2, Sparkles, ArrowRight } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface BrandProfile {
   id: string;
@@ -37,18 +38,34 @@ interface AnalysisResult {
   };
 }
 
+interface ImprovementSuggestions {
+  brand_description: string;
+  content_example_1: string;
+  content_example_2: string;
+  personality_traits: string[];
+  communication_tones: string[];
+  explanation: string;
+  key_changes: string[];
+}
+
 interface BrandVoiceAnalysisProps {
   brandProfile: BrandProfile;
   onAnalysisComplete?: (result: AnalysisResult) => void;
+  onBrandProfileUpdated?: (updatedProfile: BrandProfile) => void;
 }
 
 export const BrandVoiceAnalysis: React.FC<BrandVoiceAnalysisProps> = ({
   brandProfile,
-  onAnalysisComplete
+  onAnalysisComplete,
+  onBrandProfileUpdated
 }) => {
+  const { user } = useAuth();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [improvementLoading, setImprovementLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [improvementResult, setImprovementResult] = useState<ImprovementSuggestions | null>(null);
+  const [showImprovementPreview, setShowImprovementPreview] = useState(false);
 
   const analyzeWithAI = async () => {
     setLoading(true);
@@ -140,6 +157,162 @@ Analizează coerența între personalitate, ton și exemplele de conținut. Ofer
     }
   };
 
+  const improveBrandVoice = async () => {
+    if (!analysis || !user) return;
+
+    setImprovementLoading(true);
+    setError(null);
+
+    try {
+      const prompt = `
+Bazat pe următoarea analiză a vocii brandului, îmbunătățește profilul brandului pentru a obține un scor mai mare:
+
+PROFIL BRAND ACTUAL:
+Nume: ${brandProfile.brand_name}
+Descriere: ${brandProfile.brand_description}
+Trăsături personalitate: ${brandProfile.personality_traits.join(', ')}
+Tonuri comunicare: ${brandProfile.communication_tones.join(', ')}
+Exemplu conținut 1: ${brandProfile.content_example_1}
+${brandProfile.content_example_2 ? `Exemplu conținut 2: ${brandProfile.content_example_2}` : ''}
+
+ANALIZA CURENTĂ:
+Scor general: ${analysis.overall_score}/100
+Puncte forte: ${analysis.strengths.join(', ')}
+Îmbunătățiri necesare: ${analysis.improvements.join(', ')}
+Trăsături lipsă: ${analysis.recommendations.missing_traits.join(', ')}
+Ajustări ton: ${analysis.recommendations.tone_adjustments.join(', ')}
+Sfaturi conținut: ${analysis.recommendations.content_tips.join(', ')}
+
+Te rog să îmbunătățești profilul brandului și să returnezi DOAR un obiect JSON valid cu următoarea structură:
+{
+  "brand_description": "Descrierea îmbunătățită a brandului (păstrează esența dar îmbunătățește claritatea și impactul)",
+  "content_example_1": "Exemplul de conținut 1 îmbunătățit (păstrează stilul dar îmbunătățește coerența cu personalitatea)",
+  "content_example_2": "Un exemplu nou de conținut care completează primul (diferit în format dar consistent în voce)",
+  "personality_traits": ["listă", "cu", "trăsături", "îmbunătățite", "inclusiv", "cele", "lipsă"],
+  "communication_tones": ["listă", "cu", "tonuri", "îmbunătățite", "și", "ajustate"],
+  "explanation": "Explicația detaliată a îmbunătățirilor făcute și de ce vor crește scorul",
+  "key_changes": ["schimbare 1", "schimbare 2", "schimbare 3"]
+}
+
+INSTRUCȚIUNI IMPORTANTE:
+1. Păstrează esența și autenticitatea brandului
+2. Îmbunătățește doar aspectele identificate în analiză
+3. Adaugă trăsăturile lipsă recomandate
+4. Ajustează tonurile conform sugestiilor
+5. Îmbunătățește exemplele de conținut pentru mai multă coerență
+6. Asigură-te că toate elementele lucrează împreună armonios
+7. Explică clar ce ai schimbat și de ce
+
+Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
+`;
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-gemini-response`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to improve brand voice');
+      }
+
+      const data = await response.json();
+      
+      // Parse the JSON response from AI
+      let improvementData: ImprovementSuggestions;
+      try {
+        // Extract JSON from the response text
+        const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          improvementData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No valid JSON found in response');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI improvement response:', parseError);
+        // Fallback improvement
+        improvementData = generateFallbackImprovement();
+      }
+
+      setImprovementResult(improvementData);
+      setShowImprovementPreview(true);
+
+    } catch (err) {
+      console.error('Error improving brand voice:', err);
+      setError('Nu am putut îmbunătăți vocea brandului. Te rog încearcă din nou.');
+    } finally {
+      setImprovementLoading(false);
+    }
+  };
+
+  const applyImprovements = async () => {
+    if (!improvementResult || !user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('brand_profiles')
+        .update({
+          brand_description: improvementResult.brand_description,
+          content_example_1: improvementResult.content_example_1,
+          content_example_2: improvementResult.content_example_2,
+          personality_traits: improvementResult.personality_traits,
+          communication_tones: improvementResult.communication_tones,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update the local brand profile
+      const updatedProfile: BrandProfile = {
+        ...brandProfile,
+        brand_description: improvementResult.brand_description,
+        content_example_1: improvementResult.content_example_1,
+        content_example_2: improvementResult.content_example_2,
+        personality_traits: improvementResult.personality_traits,
+        communication_tones: improvementResult.communication_tones,
+      };
+
+      onBrandProfileUpdated?.(updatedProfile);
+      
+      // Reset states to trigger re-analysis
+      setAnalysis(null);
+      setImprovementResult(null);
+      setShowImprovementPreview(false);
+      
+      // Automatically re-analyze with the improved profile
+      setTimeout(() => {
+        analyzeWithAI();
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error applying improvements:', error);
+      setError('Nu am putut aplica îmbunătățirile. Te rog încearcă din nou.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateFallbackImprovement = (): ImprovementSuggestions => {
+    return {
+      brand_description: `${brandProfile.brand_description} Suntem dedicați să oferim experiențe autentice și de calitate superioară, construind relații de încredere cu fiecare client.`,
+      content_example_1: `${brandProfile.content_example_1} #autenticitate #calitate #încredere`,
+      content_example_2: "Astăzi vreau să vă povestesc despre pasiunea care ne motivează în fiecare zi. Fiecare detaliu contează pentru noi, pentru că știm că voi meritați doar ce e mai bun. 💫",
+      personality_traits: [...brandProfile.personality_traits, 'empatic', 'inovator', 'autentic'],
+      communication_tones: [...brandProfile.communication_tones, 'inspirațional', 'cald'],
+      explanation: "Am îmbunătățit descrierea brandului pentru mai multă claritate, am adăugat trăsături de personalitate care lipseau și am ajustat tonul pentru mai multă căldură și autenticitate.",
+      key_changes: [
+        "Adăugat trăsături de personalitate: empatic, inovator, autentic",
+        "Îmbunătățit tonul comunicării cu elemente inspiraționale",
+        "Creat un al doilea exemplu de conținut pentru diversitate"
+      ]
+    };
+  };
+
   const generateFallbackAnalysis = (profile: BrandProfile): AnalysisResult => {
     const personalityCount = profile.personality_traits.length;
     const toneCount = profile.communication_tones.length;
@@ -221,8 +394,15 @@ Analizează coerența între personalitate, ton și exemplele de conținut. Ofer
           <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl mb-4 inline-block">
             <Brain className="h-8 w-8 text-blue-600 animate-pulse" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Analizez vocea brandului...</h3>
-          <p className="text-gray-600 mb-4">AI-ul analizează profilul tău pentru a oferi feedback personalizat</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {improvementLoading ? 'Îmbunătățesc vocea brandului...' : 'Analizez vocea brandului...'}
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {improvementLoading 
+              ? 'AI-ul creează îmbunătățiri personalizate pentru brandul tău'
+              : 'AI-ul analizează profilul tău pentru a oferi feedback personalizat'
+            }
+          </p>
           <div className="animate-pulse flex space-x-1 justify-center">
             <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
             <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -247,6 +427,178 @@ Analizează coerența între personalitate, ton și exemplele de conținut. Ofer
           </Button>
         </div>
       </Card>
+    );
+  }
+
+  // Show improvement preview
+  if (showImprovementPreview && improvementResult) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200" animation="bounceIn">
+          <div className="text-center">
+            <div className="p-3 bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl mb-4 inline-block">
+              <Wand2 className="h-8 w-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Îmbunătățiri AI Generate</h2>
+            <p className="text-gray-600">
+              AI-ul a analizat profilul tău și a creat îmbunătățiri personalizate
+            </p>
+          </div>
+        </Card>
+
+        {/* Explanation */}
+        <Card className="shadow-lg" animation="slideInLeft">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-xl">
+              <Lightbulb className="h-6 w-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Explicația îmbunătățirilor</h3>
+          </div>
+          <p className="text-gray-700 leading-relaxed mb-4">{improvementResult.explanation}</p>
+          
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-3">Schimbări cheie:</h4>
+            <ul className="space-y-2">
+              {improvementResult.key_changes.map((change, index) => (
+                <li key={index} className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">{change}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Before/After Comparison */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Before */}
+          <Card className="shadow-lg" animation="slideInLeft">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-gray-100 rounded-xl">
+                <Target className="h-6 w-6 text-gray-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Înainte</h3>
+            </div>
+            
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Descriere:</h4>
+                <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">{brandProfile.brand_description}</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Personalitate:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {brandProfile.personality_traits.map((trait, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Tonuri:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {brandProfile.communication_tones.map((tone, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                      {tone}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* After */}
+          <Card className="shadow-lg border-green-200" animation="slideInRight">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-green-100 rounded-xl">
+                <Sparkles className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">După îmbunătățiri</h3>
+            </div>
+            
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Descriere îmbunătățită:</h4>
+                <p className="text-gray-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                  {improvementResult.brand_description}
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Personalitate îmbunătățită:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {improvementResult.personality_traits.map((trait, index) => {
+                    const isNew = !brandProfile.personality_traits.includes(trait);
+                    return (
+                      <span 
+                        key={index} 
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          isNew 
+                            ? 'bg-green-100 text-green-800 border border-green-300' 
+                            : 'bg-blue-100 text-blue-700'
+                        }`}
+                      >
+                        {trait} {isNew && '✨'}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Tonuri îmbunătățite:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {improvementResult.communication_tones.map((tone, index) => {
+                    const isNew = !brandProfile.communication_tones.includes(tone);
+                    return (
+                      <span 
+                        key={index} 
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          isNew 
+                            ? 'bg-green-100 text-green-800 border border-green-300' 
+                            : 'bg-purple-100 text-purple-700'
+                        }`}
+                      >
+                        {tone} {isNew && '✨'}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <Card className="text-center shadow-lg" animation="fadeInUp">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Aplici aceste îmbunătățiri?</h3>
+          <p className="text-gray-600 mb-6">
+            Îmbunătățirile vor fi salvate în profilul tău de brand și vor fi folosite pentru tot conținutul viitor.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={() => setShowImprovementPreview(false)}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              <span>Înapoi la analiză</span>
+            </Button>
+            <Button 
+              onClick={applyImprovements}
+              loading={loading}
+              className="flex items-center space-x-2 micro-bounce"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>Aplică îmbunătățirile</span>
+            </Button>
+          </div>
+        </Card>
+      </div>
     );
   }
 
@@ -446,14 +798,43 @@ Analizează coerența între personalitate, ton și exemplele de conținut. Ofer
         </div>
       </Card>
 
-      {/* Action Button */}
+      {/* Action Button - Now with AI Improvement */}
       <Card className="text-center shadow-lg" animation="bounceIn" delay={3}>
         <h3 className="text-lg font-bold text-gray-900 mb-2">Gata să îmbunătățești vocea brandului?</h3>
-        <p className="text-gray-600 mb-4">Aplică recomandările AI pentru a obține un scor mai mare</p>
-        <Button className="micro-bounce">
-          Îmbunătățește vocea brandului
-        </Button>
+        <p className="text-gray-600 mb-4">
+          Lasă AI-ul să îmbunătățească automat profilul brandului bazat pe recomandările de mai sus
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button 
+            variant="outline"
+            className="flex items-center space-x-2 micro-bounce"
+            onClick={() => window.location.reload()}
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span>Analizează din nou</span>
+          </Button>
+          <Button 
+            onClick={improveBrandVoice}
+            loading={improvementLoading}
+            className="flex items-center space-x-2 micro-bounce"
+          >
+            <Wand2 className="h-4 w-4" />
+            <span>
+              {improvementLoading ? 'Îmbunătățesc...' : 'Îmbunătățește cu AI'}
+            </span>
+          </Button>
+        </div>
       </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="bg-red-50 border-red-200" animation="slideInLeft">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+            <p className="text-red-800">{error}</p>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
