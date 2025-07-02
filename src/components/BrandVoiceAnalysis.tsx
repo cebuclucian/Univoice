@@ -253,6 +253,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
 
     setLoading(true);
     try {
+      // Actualizează profilul brandului cu îmbunătățirile
       const { error } = await supabase
         .from('brand_profiles')
         .update({
@@ -266,6 +267,16 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Creează un log al îmbunătățirii pentru tracking
+      await supabase
+        .from('ai_recommendations')
+        .insert({
+          user_id: user.id,
+          title: 'Vocea brandului îmbunătățită cu AI',
+          details: `Vocea brandului a fost îmbunătățită automat cu AI. Schimbări: ${improvementResult.key_changes.join(', ')}. Toate planurile de marketing viitoare vor folosi această voce îmbunătățită.`,
+          is_read: false
+        });
 
       // Update the local brand profile
       const updatedProfile: BrandProfile = {
@@ -447,6 +458,22 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           </div>
         </Card>
 
+        {/* Important Notice */}
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200" animation="slideInLeft">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <Lightbulb className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-2">Important de știut:</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                Dacă aplici aceste îmbunătățiri, <strong>toate planurile de marketing viitoare</strong> vor folosi această voce îmbunătățită. 
+                Dacă nu le aplici, planurile vor continua să folosească vocea originală a brandului.
+              </p>
+            </div>
+          </div>
+        </Card>
+
         {/* Explanation */}
         <Card className="shadow-lg" animation="slideInLeft">
           <div className="flex items-center space-x-3 mb-4">
@@ -577,7 +604,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         <Card className="text-center shadow-lg" animation="fadeInUp">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Aplici aceste îmbunătățiri?</h3>
           <p className="text-gray-600 mb-6">
-            Îmbunătățirile vor fi salvate în profilul tău de brand și vor fi folosite pentru tot conținutul viitor.
+            Îmbunătățirile vor fi salvate în profilul tău de brand și <strong>toate planurile de marketing viitoare</strong> vor folosi această voce îmbunătățită.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -586,7 +613,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
               className="flex items-center space-x-2"
             >
               <ArrowRight className="h-4 w-4 rotate-180" />
-              <span>Înapoi la analiză</span>
+              <span>Nu, păstrează vocea originală</span>
             </Button>
             <Button 
               onClick={applyImprovements}
@@ -594,7 +621,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
               className="flex items-center space-x-2 micro-bounce"
             >
               <CheckCircle className="h-4 w-4" />
-              <span>Aplică îmbunătățirile</span>
+              <span>Da, aplică îmbunătățirile</span>
             </Button>
           </div>
         </Card>

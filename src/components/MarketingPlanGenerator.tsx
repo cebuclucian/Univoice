@@ -75,11 +75,11 @@ export const MarketingPlanGenerator: React.FC<MarketingPlanGeneratorProps> = ({
     setError(null);
 
     try {
-      // Construiește prompt-ul pentru AI
+      // Construiește prompt-ul pentru AI folosind vocea curentă a brandului
       const prompt = `
-Creează un plan de marketing detaliat în format JSON pentru următorul brand:
+Creează un plan de marketing detaliat în format JSON pentru următorul brand, folosind EXACT vocea și personalitatea definită:
 
-INFORMAȚII BRAND:
+INFORMAȚII BRAND (VOCEA CURENTĂ - FOLOSEȘTE EXACT ACEASTA):
 - Nume: ${brandProfile.brand_name}
 - Descriere: ${brandProfile.brand_description}
 - Personalitate: ${brandProfile.personality_traits.join(', ')}
@@ -103,14 +103,26 @@ ${formData.platforms.map(p => availablePlatforms.find(ap => ap.id === p)?.name).
 INFORMAȚII ADIȚIONALE:
 ${formData.additionalInfo}
 
-EXEMPLU DE CONȚINUT BRAND:
+EXEMPLU DE CONȚINUT BRAND (PĂSTREAZĂ ACEST STIL):
 ${brandProfile.content_example_1}
 ${brandProfile.content_example_2 ? `\n${brandProfile.content_example_2}` : ''}
+
+INSTRUCȚIUNI CRITICE:
+1. Folosește EXACT personalitatea și tonul definit în profilul brandului
+2. Tot conținutul generat TREBUIE să reflecte vocea curentă a brandului
+3. Păstrează stilul și abordarea din exemplele de conținut
+4. Nu schimba sau îmbunătățește vocea - folosește-o exact cum este definită
+5. Asigură-te că fiecare postare sună ca și cum ar fi scrisă de același brand
 
 Te rog să creezi un plan de marketing complet în format JSON cu următoarea structură:
 {
   "title": "Titlul planului",
   "summary": "Rezumat executiv al planului",
+  "brand_voice_used": {
+    "personality": "${brandProfile.personality_traits.join(', ')}",
+    "tone": "${brandProfile.communication_tones.join(', ')}",
+    "timestamp": "${new Date().toISOString()}"
+  },
   "objectives": ["obiectiv 1", "obiectiv 2", "obiectiv 3"],
   "target_audience": {
     "primary": "Audiența principală",
@@ -140,9 +152,9 @@ Te rog să creezi un plan de marketing complet în format JSON cu următoarea st
           "platform": "Platforma",
           "type": "Tipul conținutului",
           "title": "Titlul postării",
-          "description": "Descrierea conținutului",
+          "description": "Descrierea conținutului (scris în vocea brandului)",
           "hashtags": ["#hashtag1", "#hashtag2"],
-          "call_to_action": "Call to action"
+          "call_to_action": "Call to action în stilul brandului"
         }
       ]
     }
@@ -177,12 +189,13 @@ Te rog să creezi un plan de marketing complet în format JSON cu următoarea st
 }
 
 Asigură-te că planul:
-1. Reflectă vocea și personalitatea brandului
+1. Reflectă EXACT vocea și personalitatea brandului definită
 2. Este adaptat platformelor selectate
-3. Include conținut specific și acționabil
+3. Include conținut specific și acționabil în stilul brandului
 4. Respectă bugetul și perioada specificată
 5. Include KPI-uri măsurabile
 6. Oferă recomandări practice
+7. Toate textele sunt scrise în vocea curentă a brandului
 
 Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
 `;
@@ -219,6 +232,15 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         planData = generateFallbackPlan();
       }
 
+      // Adaugă informații despre vocea brandului folosită
+      planData.brand_voice_used = {
+        personality: brandProfile.personality_traits,
+        tone: brandProfile.communication_tones,
+        brand_description: brandProfile.brand_description,
+        content_examples: [brandProfile.content_example_1, brandProfile.content_example_2].filter(Boolean),
+        timestamp: new Date().toISOString()
+      };
+
       // Salvează planul în baza de date
       const { data: savedPlan, error: saveError } = await supabase
         .from('marketing_plans')
@@ -248,6 +270,16 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         })
         .eq('id', user.id);
 
+      // Creează o notificare de succes
+      await supabase
+        .from('ai_recommendations')
+        .insert({
+          user_id: user.id,
+          title: 'Plan de marketing generat cu succes',
+          details: `Planul "${planData.title}" a fost generat folosind vocea curentă a brandului. Personalitate: ${brandProfile.personality_traits.join(', ')}. Ton: ${brandProfile.communication_tones.join(', ')}.`,
+          is_read: false
+        });
+
     } catch (err) {
       console.error('Error generating marketing plan:', err);
       setError('Nu am putut genera planul de marketing. Te rog încearcă din nou.');
@@ -259,7 +291,13 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
   const generateFallbackPlan = () => {
     return {
       title: `Plan de marketing pentru ${brandProfile.brand_name}`,
-      summary: `Plan de marketing personalizat pentru ${formData.objective} pe o perioadă de ${formData.timeframe}.`,
+      summary: `Plan de marketing personalizat pentru ${formData.objective} pe o perioadă de ${formData.timeframe}, folosind vocea curentă a brandului.`,
+      brand_voice_used: {
+        personality: brandProfile.personality_traits,
+        tone: brandProfile.communication_tones,
+        brand_description: brandProfile.brand_description,
+        timestamp: new Date().toISOString()
+      },
       objectives: [
         `Creșterea awareness-ului brandului ${brandProfile.brand_name}`,
         `Atragerea și convertirea audiența țintă`,
@@ -284,7 +322,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         const platform = availablePlatforms.find(p => p.id === platformId);
         return {
           name: platform?.name || platformId,
-          strategy: `Strategie adaptată pentru ${platform?.name}`,
+          strategy: `Strategie adaptată pentru ${platform?.name} folosind vocea brandului`,
           content_types: ["Postări organice", "Stories", "Video content"],
           posting_frequency: "3-5 postări pe săptămână",
           kpis: ["Reach", "Engagement", "Conversii"]
@@ -293,12 +331,12 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
       recommendations: [
         {
           category: "Conținut",
-          suggestion: "Focusează-te pe storytelling autentic",
+          suggestion: "Focusează-te pe storytelling autentic în vocea brandului",
           priority: "high"
         },
         {
           category: "Engagement",
-          suggestion: "Răspunde prompt la comentarii și mesaje",
+          suggestion: "Răspunde prompt la comentarii și mesaje în stilul brandului",
           priority: "high"
         }
       ]
@@ -322,10 +360,37 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Plan generat cu succes!</h2>
             <p className="text-gray-600">
-              Planul tău de marketing personalizat este gata. Poți să-l vizualizezi mai jos.
+              Planul tău de marketing personalizat este gata, folosind vocea curentă a brandului.
             </p>
           </div>
         </Card>
+
+        {/* Brand Voice Used Notice */}
+        {generatedPlan.brand_voice_used && (
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200" animation="slideInLeft">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Brain className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">Vocea brandului folosită:</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-800">Personalitate: </span>
+                    <span className="text-gray-700">{generatedPlan.brand_voice_used.personality?.join(', ')}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-800">Ton: </span>
+                    <span className="text-gray-700">{generatedPlan.brand_voice_used.tone?.join(', ')}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Toate planurile viitoare vor folosi vocea curentă a brandului, inclusiv orice îmbunătățiri aplicate.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Plan Overview */}
         <Card className="shadow-lg" animation="slideInLeft" hover="subtle">
@@ -405,6 +470,31 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           <p className="text-gray-600 text-lg">
             Creează un plan de marketing personalizat pentru <strong>{brandProfile.brand_name}</strong>
           </p>
+        </div>
+      </Card>
+
+      {/* Brand Voice Notice */}
+      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200" animation="slideInLeft">
+        <div className="flex items-start space-x-3">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Brain className="h-6 w-6 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 mb-2">Vocea brandului care va fi folosită:</h3>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-semibold text-gray-800">Personalitate: </span>
+                <span className="text-gray-700">{brandProfile.personality_traits.join(', ')}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-800">Ton: </span>
+                <span className="text-gray-700">{brandProfile.communication_tones.join(', ')}</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Planul va fi generat folosind exact această voce a brandului. Orice modificări viitoare ale vocii se vor reflecta în planurile noi.
+              </p>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -513,7 +603,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Lightbulb className="h-6 w-6 text-yellow-500" />
             <p className="text-gray-600">
-              AI-ul va analiza vocea brandului tău și va crea un plan personalizat
+              AI-ul va analiza vocea brandului tău și va crea un plan personalizat folosind exact personalitatea și tonul definit
             </p>
           </div>
           
