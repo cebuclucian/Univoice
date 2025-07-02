@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Bell, 
-  X, 
-  Check, 
-  AlertCircle, 
-  Info, 
-  CheckCircle, 
-  AlertTriangle,
-  Trash2,
-  MarkAsRead,
-  Settings
-} from 'lucide-react';
+import { Bell, X, Check, AlertCircle, Info, CheckCircle, AlertTriangle, Trash2, BookMarked as MarkAsRead, Settings } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
