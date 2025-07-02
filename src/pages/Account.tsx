@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Crown, Settings, Shield, Bell, CreditCard } from 'lucide-react';
+import { User, Mail, Calendar, Crown, Settings, Shield, Bell, CreditCard, Edit3, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -14,6 +15,16 @@ interface UserProfile {
   updated_at: string | null;
 }
 
+interface BrandProfile {
+  id: string;
+  brand_name: string;
+  brand_description: string;
+  personality_traits: string[];
+  communication_tones: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 interface Subscription {
   id: string;
   plan: string | null;
@@ -25,14 +36,29 @@ interface Subscription {
 
 export const Account: React.FC = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: ''
   });
+
+  // Check for success message from brand voice update
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Clear the message after showing it
+      setTimeout(() => setSuccessMessage(''), 5000);
+      // Clear the state to prevent showing the message again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,6 +78,17 @@ export const Account: React.FC = () => {
             fullName: profileData.full_name || '',
             email: user.email || ''
           });
+        }
+
+        // Fetch brand profile
+        const { data: brandData, error: brandError } = await supabase
+          .from('brand_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (brandData && !brandError) {
+          setBrandProfile(brandData);
         }
 
         // Fetch subscription
@@ -94,11 +131,18 @@ export const Account: React.FC = () => {
         full_name: formData.fullName,
         updated_at: new Date().toISOString()
       } : null);
+
+      setSuccessMessage('Profilul a fost actualizat cu succes!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error saving profile:', error);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEditBrandVoice = () => {
+    navigate('/app/onboarding', { state: { editMode: true } });
   };
 
   const handleSignOut = async () => {
@@ -132,6 +176,18 @@ export const Account: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Success Message */}
+      {successMessage && (
+        <Card className="bg-green-50 border-green-200" animation="slideInLeft">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Sparkles className="h-5 w-5 text-green-600" />
+            </div>
+            <p className="text-green-800 font-medium">{successMessage}</p>
+          </div>
+        </Card>
+      )}
+
       {/* Header */}
       <Card animation="fadeInUp" className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <div className="flex items-center space-x-6">
@@ -194,56 +250,142 @@ export const Account: React.FC = () => {
           </div>
         </Card>
 
-        {/* Subscription Info */}
+        {/* Brand Voice Summary */}
         <Card className="shadow-lg" animation="slideInRight" hover="subtle">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-purple-100 rounded-xl">
-              <Crown className="h-6 w-6 text-purple-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Abonament</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleEditBrandVoice}
+              className="flex items-center space-x-2 micro-bounce"
+            >
+              <Edit3 className="h-4 w-4" />
+              <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
+            </Button>
           </div>
+          
+          {brandProfile ? (
+            <>
+              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-100" animation="scaleIn" delay={1}>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{brandProfile.brand_name}</h3>
+                <p className="text-gray-700 mb-4 text-sm leading-relaxed">{brandProfile.brand_description}</p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Personalitate:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {brandProfile.personality_traits?.slice(0, 2).map((trait, index) => (
+                        <span 
+                          key={index} 
+                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                        >
+                          {trait}
+                        </span>
+                      ))}
+                      {brandProfile.personality_traits?.length > 2 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                          +{brandProfile.personality_traits.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Ton:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {brandProfile.communication_tones?.slice(0, 2).map((tone, index) => (
+                        <span 
+                          key={index} 
+                          className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                        >
+                          {tone}
+                        </span>
+                      ))}
+                      {brandProfile.communication_tones?.length > 2 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                          +{brandProfile.communication_tones.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-          <div className="space-y-4">
-            <Card className={`${
-              currentPlan === 'free' ? 'bg-gray-50 border-gray-200' :
-              currentPlan === 'pro' ? 'bg-blue-50 border-blue-200' :
-              'bg-purple-50 border-purple-200'
-            }`} padding="sm">
-              <div className="text-center">
-                <h3 className="font-bold text-lg capitalize">{currentPlan}</h3>
-                <p className="text-sm text-gray-600">
-                  {currentPlan === 'free' ? 'Plan gratuit' :
-                   currentPlan === 'pro' ? 'Plan profesional' :
-                   'Plan premium'}
-                </p>
-              </div>
-            </Card>
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <p className="text-xs text-gray-500">
+                    Ultima actualizare: {new Date(brandProfile.updated_at).toLocaleDateString('ro-RO')}
+                  </p>
+                </div>
+              </Card>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Planuri generate</span>
-                <span className="font-semibold">
-                  {subscription?.plans_generated_this_month || 0}
-                  {limits.plans > 0 ? ` / ${limits.plans}` : ' / ∞'}
-                </span>
+              {/* Quick Actions for Brand Voice */}
+              <Card className="mt-4 bg-gradient-to-r from-green-50 to-blue-50 border-green-200" animation="scaleIn" delay={2}>
+                <div className="text-center">
+                  <h4 className="font-semibold text-gray-900 mb-2">Acțiuni rapide</h4>
+                  <div className="space-y-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full micro-bounce"
+                      onClick={handleEditBrandVoice}
+                    >
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Îmbunătățește vocea brandului
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full micro-bounce"
+                      onClick={() => navigate('/app/dashboard')}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generează conținut nou
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </>
+          ) : (
+            <Card className="text-center py-8" animation="bounceIn">
+              <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl mb-4 inline-block">
+                <Sparkles className="h-8 w-8 text-blue-600" />
               </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Conținut generat</span>
-                <span className="font-semibold">
-                  {subscription?.content_generated_this_month || 0}
-                  {limits.content > 0 ? ` / ${limits.content}` : ' / ∞'}
-                </span>
-              </div>
-            </div>
-
-            {currentPlan === 'free' && (
-              <Button variant="secondary" className="w-full flex items-center space-x-2">
-                <Crown className="h-4 w-4" />
-                <span>Upgrade la Pro</span>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Definește vocea brandului</h3>
+              <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                Ajută-ne să înțelegem personalitatea și tonul brandului tău pentru a genera conținut personalizat.
+              </p>
+              <Button 
+                className="flex items-center space-x-2 micro-bounce"
+                onClick={handleEditBrandVoice}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Începe configurarea</span>
               </Button>
-            )}
-          </div>
+            </Card>
+          )}
+
+          {/* Subscription Status */}
+          <Card className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200" animation="scaleIn" delay={3}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Crown className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm">Plan {currentPlan}</h4>
+                  <p className="text-xs text-gray-600">
+                    {subscription?.plans_generated_this_month || 0}
+                    {limits.plans > 0 ? `/${limits.plans}` : '/∞'} planuri
+                  </p>
+                </div>
+              </div>
+              {currentPlan === 'free' && (
+                <Button size="sm" variant="secondary" className="micro-bounce">
+                  Upgrade
+                </Button>
+              )}
+            </div>
+          </Card>
         </Card>
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Sparkles, FileText, Palette, CheckCircle, Wand2, Brain } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowRight, ArrowLeft, Sparkles, FileText, Palette, CheckCircle, Wand2, Brain, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { supabase } from '../lib/supabase';
@@ -26,6 +26,7 @@ export const Onboarding: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasExistingProfile, setHasExistingProfile] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(true);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     brandName: '',
     brandDescription: '',
@@ -39,6 +40,10 @@ export const Onboarding: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we're coming from a specific source (like Account page)
+  const isEditMode = location.state?.editMode || false;
 
   useEffect(() => {
     const checkExistingProfile = async () => {
@@ -107,6 +112,8 @@ export const Onboarding: React.FC = () => {
     if (!user) return;
 
     setLoading(true);
+    setSaveSuccess(false);
+    
     try {
       if (hasExistingProfile) {
         const { error } = await supabase
@@ -118,6 +125,7 @@ export const Onboarding: React.FC = () => {
             content_example_2: formData.sampleText2 || null,
             personality_traits: formData.selectedPersonality,
             communication_tones: formData.selectedTone,
+            updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
 
@@ -138,7 +146,21 @@ export const Onboarding: React.FC = () => {
         if (error) throw error;
       }
 
-      navigate('/app/dashboard');
+      setSaveSuccess(true);
+      
+      // Show success message briefly before redirecting
+      setTimeout(() => {
+        if (isEditMode) {
+          navigate('/app/account', { 
+            state: { 
+              message: 'Vocea brandului a fost actualizată cu succes!' 
+            } 
+          });
+        } else {
+          navigate('/app/dashboard');
+        }
+      }, 1500);
+
     } catch (error: any) {
       console.error('Error saving brand profile:', error);
     } finally {
@@ -165,7 +187,35 @@ export const Onboarding: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-64">
         <Card animation="bounceIn" className="p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Se încarcă profilul brandului...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Success state
+  if (saveSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="shadow-2xl border-0 text-center" animation="bounceIn" padding="lg">
+          <div className="p-6 bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl mb-6 inline-block">
+            <CheckCircle className="h-16 w-16 text-green-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            {hasExistingProfile ? 'Vocea brandului actualizată!' : 'Vocea brandului definită!'}
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">
+            {hasExistingProfile 
+              ? 'Modificările au fost salvate cu succes. Acum poți genera conținut și mai personalizat.'
+              : 'Felicitări! Acum poți începe să generezi conținut de marketing personalizat pentru brandul tău.'
+            }
+          </p>
+          <div className="animate-pulse">
+            <p className="text-sm text-gray-500">Redirecționare automată...</p>
+          </div>
         </Card>
       </div>
     );
@@ -184,9 +234,16 @@ export const Onboarding: React.FC = () => {
               <div className="p-2 bg-white/20 rounded-xl micro-scale">
                 <Brain className="h-6 w-6" />
               </div>
-              <h1 className="text-2xl font-bold">
-                {hasExistingProfile ? t('onboarding.updateTitle') : t('onboarding.title')}
-              </h1>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  {hasExistingProfile ? t('onboarding.updateTitle') : t('onboarding.title')}
+                </h1>
+                {isEditMode && (
+                  <p className="text-blue-100 text-sm mt-1">
+                    Editează și îmbunătățește vocea brandului tău
+                  </p>
+                )}
+              </div>
             </div>
             <span className="text-sm bg-white/20 px-4 py-2 rounded-full font-medium">
               {t('onboarding.stepOf', { current: step.toString(), total: '4' })}
@@ -204,7 +261,7 @@ export const Onboarding: React.FC = () => {
 
         <div className="p-8 lg:p-12">
           {/* Welcome Message for New Users */}
-          {!hasExistingProfile && step === 1 && (
+          {!hasExistingProfile && step === 1 && !isEditMode && (
             <Card 
               className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 mb-8" 
               padding="lg"
@@ -218,6 +275,27 @@ export const Onboarding: React.FC = () => {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.welcomeTitle')}</h3>
                   <p className="text-gray-700 leading-relaxed">
                     {t('onboarding.welcomeSubtitle')}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Edit Mode Notice */}
+          {isEditMode && step === 1 && (
+            <Card 
+              className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 mb-8" 
+              padding="lg"
+              animation="slideInLeft"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-amber-100 rounded-xl micro-scale">
+                  <AlertCircle className="h-8 w-8 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Editează vocea brandului</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Poți modifica orice aspect al vocii brandului tău. Schimbările vor fi aplicate imediat pentru tot conținutul viitor generat.
                   </p>
                 </div>
               </div>
@@ -294,6 +372,11 @@ export const Onboarding: React.FC = () => {
 
             {step === 3 && (
               <Card className="max-w-4xl mx-auto" animation="scaleIn" padding="lg">
+                <div className="mb-6 text-center">
+                  <p className="text-gray-600">
+                    Selectează {formData.selectedPersonality.length}/12 trăsături care descriu brandul tău
+                  </p>
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {personalityTraits.map((trait, index) => (
                     <button
@@ -317,6 +400,11 @@ export const Onboarding: React.FC = () => {
 
             {step === 4 && (
               <Card className="max-w-4xl mx-auto" animation="scaleIn" padding="lg">
+                <div className="mb-6 text-center">
+                  <p className="text-gray-600">
+                    Selectează {formData.selectedTone.length}/12 tonuri pentru comunicarea brandului
+                  </p>
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {toneAttributes.map((tone, index) => (
                     <button
