@@ -7,11 +7,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
+import { useUserStats } from '../hooks/useUserStats';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SkeletonLoader, CardSkeleton } from '../components/ui/SkeletonLoader';
 import { BrandVoiceAnalysis } from '../components/BrandVoiceAnalysis';
+import { UsageStats } from '../components/UsageStats';
+import { BrandVoiceHistory } from '../components/BrandVoiceHistory';
 
 interface BrandProfile {
   id: string;
@@ -47,6 +50,7 @@ export const Dashboard: React.FC = () => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { stats } = useUserStats();
   const navigate = useNavigate();
 
   // Mock data for enhanced features
@@ -214,7 +218,7 @@ export const Dashboard: React.FC = () => {
 
   const activePlans = marketingPlans.length;
   const draftPlans = 0; // Mock data since we don't have status field
-  const contentGenerated = 24; // Mock data
+  const contentGenerated = stats?.content_this_month || 0;
   const daysUntilNext = 3; // Mock data
 
   const getChannelIcon = (channel: string) => {
@@ -312,75 +316,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
 
-        {/* Notifications */}
-        <Card className="shadow-lg" animation="slideInRight" hover="subtle">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Notificări</h3>
-            <Bell className="h-5 w-5 text-gray-400" />
-          </div>
-          
-          {brandProfile ? (
-            <div className="space-y-3">
-              {notifications.map((notification, index) => (
-                <Card 
-                  key={notification.id}
-                  className={`border-l-4 ${
-                    notification.type === 'warning' ? 'border-amber-400 bg-amber-50' :
-                    notification.type === 'info' ? 'border-blue-400 bg-blue-50' :
-                    'border-green-400 bg-green-50'
-                  }`}
-                  padding="sm"
-                  animation="fadeInUp"
-                  delay={index + 1}
-                  hover="subtle"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className={`p-1 rounded-full ${
-                      notification.type === 'warning' ? 'bg-amber-200' :
-                      notification.type === 'info' ? 'bg-blue-200' :
-                      'bg-green-200'
-                    }`}>
-                      {notification.type === 'warning' ? 
-                        <AlertCircle className="h-4 w-4 text-amber-600" /> :
-                        notification.type === 'info' ?
-                        <Bell className="h-4 w-4 text-blue-600" /> :
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      }
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm">{notification.title}</h4>
-                      <p className="text-gray-600 text-xs mt-1">{notification.message}</p>
-                      {notification.action && (
-                        <Button variant="ghost" size="sm" className="mt-2 text-xs p-1 h-auto">
-                          {notification.action}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-blue-50 border-blue-200" padding="md" animation="scaleIn">
-              <div className="text-center">
-                <div className="p-2 bg-blue-100 rounded-lg mb-3 inline-block">
-                  <Target className="h-5 w-5 text-blue-600" />
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-2">Primul pas</h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  Definește vocea brandului pentru a începe să primești notificări personalizate.
-                </p>
-                <Button 
-                  size="sm" 
-                  onClick={handleDefineBrandVoice}
-                  className="micro-bounce"
-                >
-                  Începe acum
-                </Button>
-              </div>
-            </Card>
-          )}
-        </Card>
+        {/* Usage Stats */}
+        <UsageStats />
       </div>
 
       {/* Statistics Cards */}
@@ -549,120 +486,8 @@ export const Dashboard: React.FC = () => {
           )}
         </Card>
 
-        {/* Brand Profile Summary */}
-        <Card className="shadow-lg" animation="slideInRight" hover="subtle">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
-            <div className="flex space-x-2">
-              {brandProfile && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAnalyzeBrandVoice}
-                  className="flex items-center space-x-2 micro-bounce"
-                >
-                  <Brain className="h-4 w-4" />
-                  <span>Analizează</span>
-                </Button>
-              )}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
-                className="flex items-center space-x-2 micro-bounce"
-              >
-                <Edit3 className="h-4 w-4" />
-                <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
-              </Button>
-            </div>
-          </div>
-          
-          {brandProfile ? (
-            <>
-              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-100" animation="scaleIn" delay={1}>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{brandProfile.brand_name}</h3>
-                <p className="text-gray-700 mb-4 text-sm leading-relaxed">{brandProfile.brand_description}</p>
-                
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Personalitate:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {brandProfile.personality_traits?.slice(0, 2).map((trait, index) => (
-                        <span 
-                          key={index} 
-                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                        >
-                          {t(`personalityTraits.${trait}`)}
-                        </span>
-                      ))}
-                      {brandProfile.personality_traits?.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          +{brandProfile.personality_traits.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Ton:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {brandProfile.communication_tones?.slice(0, 2).map((tone, index) => (
-                        <span 
-                          key={index} 
-                          className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
-                        >
-                          {t(`toneAttributes.${tone}`)}
-                        </span>
-                      ))}
-                      {brandProfile.communication_tones?.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          +{brandProfile.communication_tones.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Subscription Status */}
-              <Card className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200" animation="scaleIn" delay={2}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-amber-100 rounded-lg">
-                      <Crown className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 text-sm">Plan Gratuit</h4>
-                      <p className="text-xs text-gray-600">
-                        {activePlans}/5 planuri folosite
-                      </p>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="secondary" className="micro-bounce">
-                    Upgrade
-                  </Button>
-                </div>
-              </Card>
-            </>
-          ) : (
-            <Card className="text-center py-8" animation="bounceIn">
-              <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl mb-4 inline-block">
-                <Target className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Definește vocea brandului</h3>
-              <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                Ajută-ne să înțelegem personalitatea și tonul brandului tău pentru a genera conținut personalizat.
-              </p>
-              <Button 
-                onClick={handleDefineBrandVoice}
-                className="flex items-center space-x-2 micro-bounce"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Începe configurarea</span>
-              </Button>
-            </Card>
-          )}
-        </Card>
+        {/* Brand Voice History */}
+        <BrandVoiceHistory />
       </div>
 
       {/* Marketing Plans and AI Recommendations */}
