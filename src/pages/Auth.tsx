@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Brain, Mail, Lock, User, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+import { Brain, Mail, Lock, User, ArrowRight, CheckCircle, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -60,8 +60,56 @@ export const Auth: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.name === 'email' ? e.target.value.trim() : e.target.value
     }));
+  };
+
+  const getErrorMessage = (error: string) => {
+    if (error.toLowerCase().includes('email not confirmed')) {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-red-800">Email-ul nu a fost confirmat</p>
+              <p className="text-sm text-red-700 mt-1">
+                Pentru a te conecta, trebuie să îți confirmi adresa de email.
+              </p>
+            </div>
+          </div>
+          <div className="bg-red-100 rounded-lg p-3 border border-red-200">
+            <p className="text-sm text-red-800 font-medium mb-2">Ce trebuie să faci:</p>
+            <ol className="text-sm text-red-700 space-y-1 list-decimal list-inside">
+              <li>Verifică-ți inbox-ul pentru email-ul de confirmare</li>
+              <li>Verifică și folderul de spam/junk</li>
+              <li>Dă click pe link-ul de confirmare din email</li>
+              <li>Revino aici și încearcă din nou să te conectezi</li>
+            </ol>
+          </div>
+        </div>
+      );
+    }
+
+    if (error.toLowerCase().includes('email address') && error.toLowerCase().includes('invalid')) {
+      return (
+        <div className="flex items-start space-x-2">
+          <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-red-800">Adresa de email nu este validă</p>
+            <p className="text-sm text-red-700 mt-1">
+              Te rugăm să introduci o adresă de email validă (ex: nume@exemplu.com)
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-start space-x-2">
+        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-red-700">{error}</p>
+      </div>
+    );
   };
 
   return (
@@ -145,7 +193,7 @@ export const Auth: React.FC = () => {
 
             {error && (
               <Card className="bg-red-50 border-red-200 text-red-700" padding="sm" animation="slideInLeft">
-                <p className="text-sm">{error}</p>
+                {getErrorMessage(error)}
               </Card>
             )}
 
