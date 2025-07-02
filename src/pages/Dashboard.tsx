@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, Target, Calendar, BarChart3, Crown, Sparkles, TrendingUp, Users, Edit3,
   Clock, CheckCircle, AlertCircle, Zap, Brain, MessageSquare, Instagram,
-  Facebook, Twitter, Mail, Globe, ArrowRight, Star, Bell, Settings
+  Facebook, Twitter, Mail, Globe, ArrowRight, Star, Bell, Settings, Wand2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -127,6 +127,14 @@ export const Dashboard: React.FC = () => {
     fetchData();
   }, [user]);
 
+  const handleDefineBrandVoice = () => {
+    navigate('/app/onboarding');
+  };
+
+  const handleEditBrandVoice = () => {
+    navigate('/app/onboarding', { state: { editMode: true } });
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -221,14 +229,25 @@ export const Dashboard: React.FC = () => {
                   <Zap className="h-5 w-5" />
                   <span>Generează conținut rapid</span>
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handleEditBrandVoice}
+                  className="flex items-center space-x-2 micro-bounce"
+                >
+                  <Wand2 className="h-5 w-5" />
+                  <span>Îmbunătățește vocea</span>
+                </Button>
               </>
             ) : (
-              <Link to="/app/onboarding">
-                <Button size="lg" className="flex items-center space-x-2 micro-bounce">
-                  <Sparkles className="h-5 w-5" />
-                  <span>Definește vocea brandului</span>
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                onClick={handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Sparkles className="h-5 w-5" />
+                <span>Definește vocea brandului</span>
+              </Button>
             )}
           </div>
         </Card>
@@ -291,11 +310,13 @@ export const Dashboard: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-3">
                   Definește vocea brandului pentru a începe să primești notificări personalizate.
                 </p>
-                <Link to="/app/onboarding">
-                  <Button size="sm" className="micro-bounce">
-                    Începe acum
-                  </Button>
-                </Link>
+                <Button 
+                  size="sm" 
+                  onClick={handleDefineBrandVoice}
+                  className="micro-bounce"
+                >
+                  Începe acum
+                </Button>
               </div>
             </Card>
           )}
@@ -457,12 +478,13 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
                 După ce îți definești vocea brandului, vei putea vedea aici toate postările planificate și să îți organizezi conținutul.
               </p>
-              <Link to="/app/onboarding">
-                <Button className="flex items-center space-x-2 micro-bounce">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Începe configurarea</span>
-                </Button>
-              </Link>
+              <Button 
+                onClick={handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Începe configurarea</span>
+              </Button>
             </Card>
           )}
         </Card>
@@ -471,12 +493,15 @@ export const Dashboard: React.FC = () => {
         <Card className="shadow-lg" animation="slideInRight" hover="subtle">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
-            <Link to="/app/onboarding">
-              <Button variant="outline" size="sm" className="flex items-center space-x-2 micro-bounce">
-                <Edit3 className="h-4 w-4" />
-                <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
+              className="flex items-center space-x-2 micro-bounce"
+            >
+              <Edit3 className="h-4 w-4" />
+              <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
+            </Button>
           </div>
           
           {brandProfile ? (
@@ -553,12 +578,13 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600 mb-4 text-sm leading-relaxed">
                 Ajută-ne să înțelegem personalitatea și tonul brandului tău pentru a genera conținut personalizat.
               </p>
-              <Link to="/app/onboarding">
-                <Button className="flex items-center space-x-2 micro-bounce">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Începe configurarea</span>
-                </Button>
-              </Link>
+              <Button 
+                onClick={handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Începe configurarea</span>
+              </Button>
             </Card>
           )}
         </Card>
@@ -587,12 +613,13 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600 mb-4 text-sm">
                 După configurarea vocii brandului, vei putea crea planuri de marketing adaptate afacerii tale.
               </p>
-              <Link to="/app/onboarding">
-                <Button className="flex items-center space-x-2 micro-bounce">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Configurează brandul</span>
-                </Button>
-              </Link>
+              <Button 
+                onClick={handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Configurează brandul</span>
+              </Button>
             </Card>
           ) : marketingPlans.length === 0 ? (
             <Card className="text-center py-8" animation="bounceIn" delay={2}>
@@ -704,12 +731,13 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600 mb-4 text-sm leading-relaxed">
                 AI-ul nostru va analiza vocea brandului tău și va oferi recomandări personalizate pentru conținut și strategie.
               </p>
-              <Link to="/app/onboarding">
-                <Button className="flex items-center space-x-2 micro-bounce">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Activează AI</span>
-                </Button>
-              </Link>
+              <Button 
+                onClick={handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Activează AI</span>
+              </Button>
             </Card>
           )}
         </Card>
@@ -759,9 +787,10 @@ export const Dashboard: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center space-y-2 h-20 micro-bounce"
+            onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
           >
             <Settings className="h-6 w-6" />
-            <span className="text-sm">Setări avansate</span>
+            <span className="text-sm">{brandProfile ? 'Editează vocea' : 'Configurează vocea'}</span>
           </Button>
         </div>
       </Card>
