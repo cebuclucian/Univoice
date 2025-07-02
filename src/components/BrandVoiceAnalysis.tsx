@@ -67,6 +67,61 @@ export const BrandVoiceAnalysis: React.FC<BrandVoiceAnalysisProps> = ({
   const [improvementResult, setImprovementResult] = useState<ImprovementSuggestions | null>(null);
   const [showImprovementPreview, setShowImprovementPreview] = useState(false);
 
+  // Robust JSON extraction function
+  const extractAndParseJSON = (responseText: string): any => {
+    // Strategy 1: Try to parse the entire response as JSON
+    try {
+      return JSON.parse(responseText);
+    } catch (e) {
+      // Continue to next strategy
+    }
+
+    // Strategy 2: Look for JSON in markdown code blocks
+    const codeBlockRegex = /```(?:json)?\s*(\{[\s\S]*?\})\s*```/i;
+    const codeBlockMatch = responseText.match(codeBlockRegex);
+    if (codeBlockMatch) {
+      try {
+        return JSON.parse(codeBlockMatch[1]);
+      } catch (e) {
+        // Continue to next strategy
+      }
+    }
+
+    // Strategy 3: Look for JSON object using broader regex
+    const jsonRegex = /\{[\s\S]*\}/;
+    const jsonMatch = responseText.match(jsonRegex);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        // Continue to next strategy
+      }
+    }
+
+    // Strategy 4: Try to find and fix common JSON issues
+    if (jsonMatch) {
+      let jsonText = jsonMatch[0];
+      
+      // Fix common issues
+      // Remove trailing commas before closing brackets/braces
+      jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+      
+      // Fix missing commas between array elements (basic attempt)
+      jsonText = jsonText.replace(/"\s*\n\s*"/g, '",\n"');
+      
+      // Fix missing commas between object properties
+      jsonText = jsonText.replace(/"\s*\n\s*"/g, '",\n"');
+      
+      try {
+        return JSON.parse(jsonText);
+      } catch (e) {
+        // Still failed, will throw error
+      }
+    }
+
+    throw new Error('No valid JSON found in response');
+  };
+
   const analyzeWithAI = async () => {
     setLoading(true);
     setError(null);
@@ -125,18 +180,13 @@ Analizează coerența între personalitate, ton și exemplele de conținut. Ofer
 
       const data = await response.json();
       
-      // Parse the JSON response from AI
+      // Parse the JSON response from AI using robust extraction
       let analysisResult: AnalysisResult;
       try {
-        // Extract JSON from the response text
-        const jsonMatch = data.response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          analysisResult = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No valid JSON found in response');
-        }
+        analysisResult = extractAndParseJSON(data.response);
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
+        console.log('Raw AI response:', data.response);
         // Fallback analysis
         analysisResult = generateFallbackAnalysis(brandProfile);
       }
@@ -221,18 +271,13 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
 
       const data = await response.json();
       
-      // Parse the JSON response from AI
+      // Parse the JSON response from AI using robust extraction
       let improvementData: ImprovementSuggestions;
       try {
-        // Extract JSON from the response text
-        const jsonMatch = data.response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          improvementData = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No valid JSON found in response');
-        }
+        improvementData = extractAndParseJSON(data.response);
       } catch (parseError) {
         console.error('Failed to parse AI improvement response:', parseError);
+        console.log('Raw AI improvement response:', data.response);
         // Fallback improvement
         improvementData = generateFallbackImprovement();
       }
