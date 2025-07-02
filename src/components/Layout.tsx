@@ -4,6 +4,7 @@ import { Brain, User, LogOut, Settings, BarChart3, Target } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { Button } from './ui/Button';
+import { NotificationCenter } from './NotificationCenter';
 
 export const Layout: React.FC = () => {
   const { user, signOut, loading } = useAuth();
@@ -72,15 +73,21 @@ export const Layout: React.FC = () => {
                   </Link>
                 );
               })}
+            </div>
+
+            {/* Right side with notifications and user menu */}
+            <div className="flex items-center space-x-3">
+              {/* Notification Center */}
+              <NotificationCenter />
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="flex items-center space-x-2 ml-4"
+                className="flex items-center space-x-2"
               >
                 <LogOut className="h-4 w-4" />
-                <span>{t('auth.signOut')}</span>
+                <span className="hidden sm:inline">{t('auth.signOut')}</span>
               </Button>
             </div>
           </div>
