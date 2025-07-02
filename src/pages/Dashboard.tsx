@@ -11,14 +11,18 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SkeletonLoader, CardSkeleton } from '../components/ui/SkeletonLoader';
+import { BrandVoiceAnalysis } from '../components/BrandVoiceAnalysis';
 
 interface BrandProfile {
   id: string;
   brand_name: string;
   brand_description: string;
+  content_example_1: string;
+  content_example_2: string | null;
   personality_traits: string[];
   communication_tones: string[];
   created_at: string;
+  updated_at: string;
 }
 
 interface MarketingPlan {
@@ -40,6 +44,7 @@ export const Dashboard: React.FC = () => {
   const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
   const [marketingPlans, setMarketingPlans] = useState<MarketingPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -135,6 +140,10 @@ export const Dashboard: React.FC = () => {
     navigate('/app/onboarding', { state: { editMode: true } });
   };
 
+  const handleAnalyzeBrandVoice = () => {
+    setShowAnalysis(true);
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -161,6 +170,35 @@ export const Dashboard: React.FC = () => {
           <CardSkeleton className="animate-slide-in-left" />
           <CardSkeleton className="animate-slide-in-right" />
         </div>
+      </div>
+    );
+  }
+
+  // Show Brand Voice Analysis if requested
+  if (showAnalysis && brandProfile) {
+    return (
+      <div className="space-y-8">
+        {/* Back Button */}
+        <Card animation="fadeInUp">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAnalysis(false)}
+              className="flex items-center space-x-2"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              <span>Înapoi la Dashboard</span>
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Analiza Vocii Brandului</h1>
+          </div>
+        </Card>
+
+        <BrandVoiceAnalysis 
+          brandProfile={brandProfile}
+          onAnalysisComplete={(result) => {
+            console.log('Analysis completed:', result);
+          }}
+        />
       </div>
     );
   }
@@ -228,6 +266,15 @@ export const Dashboard: React.FC = () => {
                 <Button variant="outline" size="lg" className="flex items-center space-x-2 micro-bounce">
                   <Zap className="h-5 w-5" />
                   <span>Generează conținut rapid</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handleAnalyzeBrandVoice}
+                  className="flex items-center space-x-2 micro-bounce"
+                >
+                  <Brain className="h-5 w-5" />
+                  <span>Analizează vocea</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -493,15 +540,28 @@ export const Dashboard: React.FC = () => {
         <Card className="shadow-lg" animation="slideInRight" hover="subtle">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
-              className="flex items-center space-x-2 micro-bounce"
-            >
-              <Edit3 className="h-4 w-4" />
-              <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
-            </Button>
+            <div className="flex space-x-2">
+              {brandProfile && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAnalyzeBrandVoice}
+                  className="flex items-center space-x-2 micro-bounce"
+                >
+                  <Brain className="h-4 w-4" />
+                  <span>Analizează</span>
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
+              </Button>
+            </div>
           </div>
           
           {brandProfile ? (
@@ -787,10 +847,12 @@ export const Dashboard: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center space-y-2 h-20 micro-bounce"
-            onClick={brandProfile ? handleEditBrandVoice : handleDefineBrandVoice}
+            onClick={brandProfile ? (brandProfile ? handleAnalyzeBrandVoice : handleEditBrandVoice) : handleDefineBrandVoice}
           >
-            <Settings className="h-6 w-6" />
-            <span className="text-sm">{brandProfile ? 'Editează vocea' : 'Configurează vocea'}</span>
+            {brandProfile ? <Brain className="h-6 w-6" /> : <Settings className="h-6 w-6" />}
+            <span className="text-sm">
+              {brandProfile ? 'Analizează vocea' : 'Configurează vocea'}
+            </span>
           </Button>
         </div>
       </Card>
