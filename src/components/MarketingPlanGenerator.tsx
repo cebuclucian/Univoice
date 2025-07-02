@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
 import { supabase } from '../lib/supabase';
+import { sql } from '@supabase/supabase-js';
 import { useAuth } from '../contexts/AuthContext';
 
 interface BrandProfile {
@@ -266,7 +267,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
       await supabase
         .from('subscriptions')
         .update({
-          plans_generated_this_month: supabase.sql`plans_generated_this_month + 1`
+          plans_generated_this_month: sql`plans_generated_this_month + 1`
         })
         .eq('id', user.id);
 
