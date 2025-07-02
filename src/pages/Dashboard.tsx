@@ -144,6 +144,14 @@ export const Dashboard: React.FC = () => {
     setShowAnalysis(true);
   };
 
+  const handleBrandProfileUpdated = (updatedProfile: BrandProfile) => {
+    setBrandProfile(updatedProfile);
+  };
+
+  const handleCreateNewPlan = () => {
+    navigate('/app/plans');
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -198,6 +206,7 @@ export const Dashboard: React.FC = () => {
           onAnalysisComplete={(result) => {
             console.log('Analysis completed:', result);
           }}
+          onBrandProfileUpdated={handleBrandProfileUpdated}
         />
       </div>
     );
@@ -259,7 +268,11 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-3 mt-6">
             {brandProfile ? (
               <>
-                <Button size="lg" className="flex items-center space-x-2 micro-bounce">
+                <Button 
+                  size="lg" 
+                  className="flex items-center space-x-2 micro-bounce"
+                  onClick={handleCreateNewPlan}
+                >
                   <Plus className="h-5 w-5" />
                   <span>Plan de marketing nou</span>
                 </Button>
@@ -620,7 +633,9 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900 text-sm">Plan Gratuit</h4>
-                      <p className="text-xs text-gray-600">2/5 planuri folosite</p>
+                      <p className="text-xs text-gray-600">
+                        {activePlans}/5 planuri folosite
+                      </p>
                     </div>
                   </div>
                   <Button size="sm" variant="secondary" className="micro-bounce">
@@ -657,7 +672,11 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Planurile tale de marketing</h2>
             {brandProfile && (
-              <Button size="sm" className="flex items-center space-x-2 micro-bounce">
+              <Button 
+                size="sm" 
+                className="flex items-center space-x-2 micro-bounce"
+                onClick={handleCreateNewPlan}
+              >
                 <Plus className="h-4 w-4" />
                 <span>Nou</span>
               </Button>
@@ -688,7 +707,10 @@ export const Dashboard: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Nu ai încă planuri</h3>
               <p className="text-gray-600 mb-4 text-sm">Creează primul tău plan de marketing</p>
-              <Button className="flex items-center space-x-2 micro-bounce">
+              <Button 
+                className="flex items-center space-x-2 micro-bounce"
+                onClick={handleCreateNewPlan}
+              >
                 <Sparkles className="h-4 w-4" />
                 <span>Creează primul plan</span>
               </Button>
@@ -702,6 +724,7 @@ export const Dashboard: React.FC = () => {
                   hover="subtle"
                   animation="fadeInUp"
                   delay={index + 1}
+                  onClick={() => navigate('/app/plans')}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -716,6 +739,12 @@ export const Dashboard: React.FC = () => {
                         <span className="text-xs text-gray-500">
                           {new Date(plan.created_at).toLocaleDateString('ro-RO')}
                         </span>
+                        {plan.details?.brand_voice_used && (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span className="text-xs text-gray-500">Vocea curentă</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -727,7 +756,11 @@ export const Dashboard: React.FC = () => {
               ))}
               
               {marketingPlans.length > 3 && (
-                <Button variant="ghost" className="w-full mt-3 micro-bounce">
+                <Button 
+                  variant="ghost" 
+                  className="w-full mt-3 micro-bounce"
+                  onClick={() => navigate('/app/plans')}
+                >
                   Vezi toate planurile ({marketingPlans.length})
                 </Button>
               )}

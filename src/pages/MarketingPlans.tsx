@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Target, Calendar, Eye, Edit3, Trash2, Filter, Search } from 'lucide-react';
+import { Plus, Target, Calendar, Eye, Edit3, Trash2, Filter, Search, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { MarketingPlanGenerator } from '../components/MarketingPlanGenerator';
+import { MarketingPlanDetails } from '../components/MarketingPlanDetails';
 
 interface BrandProfile {
   id: string;
@@ -24,12 +25,14 @@ interface MarketingPlan {
   created_at: string;
 }
 
+type ViewMode = 'list' | 'generator' | 'details';
+
 export const MarketingPlans: React.FC = () => {
   const { user } = useAuth();
   const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
   const [marketingPlans, setMarketingPlans] = useState<MarketingPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showGenerator, setShowGenerator] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<MarketingPlan | null>(null);
 
@@ -71,7 +74,29 @@ export const MarketingPlans: React.FC = () => {
 
   const handlePlanGenerated = (newPlan: MarketingPlan) => {
     setMarketingPlans(prev => [newPlan, ...prev]);
-    setShowGenerator(false);
+    setViewMode('list');
+  };
+
+  const handleViewPlan = (plan: MarketingPlan) => {
+    setSelectedPlan(plan);
+    setViewMode('details');
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    if (!confirm('Ești sigur că vrei să ștergi acest plan?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('marketing_plans')
+        .delete()
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      setMarketingPlans(prev => prev.filter(plan => plan.id !== planId));
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+    }
   };
 
   const filteredPlans = marketingPlans.filter(plan =>
@@ -108,17 +133,35 @@ export const MarketingPlans: React.FC = () => {
     );
   }
 
-  if (showGenerator) {
+  // Show plan details
+  if (viewMode === 'details' && selectedPlan) {
+    return (
+      <MarketingPlanDetails
+        plan={selectedPlan}
+        onBack={() => {
+          setViewMode('list');
+          setSelectedPlan(null);
+        }}
+        onEdit={() => {
+          // TODO: Implement edit functionality
+          console.log('Edit plan:', selectedPlan.id);
+        }}
+      />
+    );
+  }
+
+  // Show generator
+  if (viewMode === 'generator') {
     return (
       <div className="space-y-6">
         <Card animation="fadeInUp">
           <div className="flex items-center justify-between">
             <Button 
               variant="outline" 
-              onClick={() => setShowGenerator(false)}
+              onClick={() => setViewMode('list')}
               className="flex items-center space-x-2"
             >
-              <Target className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
               <span>Înapoi la planuri</span>
             </Button>
             <h1 className="text-2xl font-bold text-gray-900">Generează Plan Nou</h1>
@@ -133,6 +176,7 @@ export const MarketingPlans: React.FC = () => {
     );
   }
 
+  // Show plans list
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -145,7 +189,7 @@ export const MarketingPlans: React.FC = () => {
             </p>
           </div>
           <Button 
-            onClick={() => setShowGenerator(true)}
+            onClick={() => setViewMode('generator')}
             className="flex items-center space-x-2"
             size="lg"
           >
@@ -190,7 +234,7 @@ export const MarketingPlans: React.FC = () => {
           </p>
           {!searchTerm && (
             <Button 
-              onClick={() => setShowGenerator(true)}
+              onClick={() => setViewMode('generator')}
               className="flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
@@ -219,13 +263,21 @@ export const MarketingPlans: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleViewPlan(plan)}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm">
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeletePlan(plan.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -271,13 +323,29 @@ export const MarketingPlans: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Brand Voice Used Indicator */}
+                  {plan.details?.brand_voice_used && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span className="text-xs text-gray-500">
+                          Vocea brandului din {new Date(plan.details.brand_voice_used.timestamp || plan.created_at).toLocaleDateString('ro-RO')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <span className="text-xs text-gray-500">
                     {new Date(plan.created_at).toLocaleDateString('ro-RO')}
                   </span>
-                  <Button size="sm" className="flex items-center space-x-1">
+                  <Button 
+                    size="sm" 
+                    className="flex items-center space-x-1"
+                    onClick={() => handleViewPlan(plan)}
+                  >
                     <Calendar className="h-3 w-3" />
                     <span>Vezi detalii</span>
                   </Button>
