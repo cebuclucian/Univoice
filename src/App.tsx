@@ -27,6 +27,13 @@ function App() {
             </PublicRoute>
           } />
           
+          {/* Direct dashboard route for backward compatibility */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Navigate to="/app/dashboard" replace />
+            </ProtectedRoute>
+          } />
+          
           {/* Protected routes - only for authenticated users */}
           <Route path="/app" element={
             <ProtectedRoute>

@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
 
-    // Nu mai creăm manual profilul - trigger-ul din backend se ocupă de asta
+    // Trigger-ul din backend se ocupă de crearea profilului
     return { data, error };
   };
 
