@@ -9,12 +9,12 @@ export const STRIPE_PLANS = {
   pro: {
     id: 'price_pro_monthly',
     name: 'Pro',
-    price: 29,
+    price: 49,
     currency: 'RON',
     interval: 'month',
     features: [
-      '50 planuri de marketing pe lună',
-      '500 conținuturi generate',
+      '20 planuri de marketing pe lună',
+      '100 conținuturi generate',
       'Analiză avansată a vocii brandului',
       'Suport prioritar',
       'Export în multiple formate'
@@ -23,12 +23,12 @@ export const STRIPE_PLANS = {
   premium: {
     id: 'price_premium_monthly',
     name: 'Premium',
-    price: 79,
+    price: 99,
     currency: 'RON',
     interval: 'month',
     features: [
-      '200 planuri de marketing pe lună',
-      '2000 conținuturi generate',
+      '50 planuri de marketing pe lună',
+      '250 conținuturi generate',
       'Analiză AI avansată',
       'Integrări cu platforme sociale',
       'Suport dedicat',

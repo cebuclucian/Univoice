@@ -154,10 +154,10 @@ async function handleSubscriptionUpdated(subscription: any, supabaseUrl: string,
   const status = subscription.status;
   const priceId = subscription.items.data[0]?.price?.id;
 
-  // Map Stripe price IDs to plan names
+  // Map Stripe price IDs to plan names - Updated with new pricing
   const planMapping: Record<string, string> = {
-    'price_pro_monthly': 'pro',
-    'price_premium_monthly': 'premium',
+    'price_pro_monthly': 'pro',      // 49 RON - 20 plans, 100 content
+    'price_premium_monthly': 'premium', // 99 RON - 50 plans, 250 content
   };
 
   const plan = planMapping[priceId] || 'free';

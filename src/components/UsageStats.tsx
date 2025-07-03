@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Target, MessageSquare, TrendingUp, AlertCircle } from 'lucide-react';
+import { Crown, Target, MessageSquare, TrendingUp, AlertCircle, Infinity } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { useUserStats } from '../hooks/useUserStats';
@@ -27,16 +27,18 @@ export const UsageStats: React.FC<UsageStatsProps> = ({
     );
   }
 
-  const planUsagePercentage = stats.plan_limit > 0 
-    ? (stats.plans_this_month / stats.plan_limit) * 100 
-    : 0;
+  const isUnlimited = (limit: number) => limit === -1;
+  
+  const planUsagePercentage = isUnlimited(stats.plan_limit) 
+    ? 0 
+    : (stats.plans_this_month / stats.plan_limit) * 100;
 
-  const contentUsagePercentage = stats.content_limit > 0 
-    ? (stats.content_this_month / stats.content_limit) * 100 
-    : 0;
+  const contentUsagePercentage = isUnlimited(stats.content_limit) 
+    ? 0 
+    : (stats.content_this_month / stats.content_limit) * 100;
 
-  const isNearPlanLimit = planUsagePercentage >= 80;
-  const isNearContentLimit = contentUsagePercentage >= 80;
+  const isNearPlanLimit = !isUnlimited(stats.plan_limit) && planUsagePercentage >= 80;
+  const isNearContentLimit = !isUnlimited(stats.content_limit) && contentUsagePercentage >= 80;
 
   const getPlanDisplayName = (plan: string) => {
     switch (plan) {
@@ -47,18 +49,27 @@ export const UsageStats: React.FC<UsageStatsProps> = ({
     }
   };
 
-  const getUsageColor = (percentage: number) => {
+  const getUsageColor = (percentage: number, isUnlimited: boolean) => {
+    if (isUnlimited) return 'text-green-600 bg-green-100';
     if (percentage >= 90) return 'text-red-600 bg-red-100';
     if (percentage >= 80) return 'text-amber-600 bg-amber-100';
     if (percentage >= 60) return 'text-yellow-600 bg-yellow-100';
     return 'text-green-600 bg-green-100';
   };
 
-  const getProgressColor = (percentage: number) => {
+  const getProgressColor = (percentage: number, isUnlimited: boolean) => {
+    if (isUnlimited) return 'bg-green-500';
     if (percentage >= 90) return 'bg-red-500';
     if (percentage >= 80) return 'bg-amber-500';
     if (percentage >= 60) return 'bg-yellow-500';
     return 'bg-green-500';
+  };
+
+  const formatLimit = (current: number, limit: number) => {
+    if (isUnlimited(limit)) {
+      return `${current}/∞`;
+    }
+    return `${current}/${limit}`;
   };
 
   return (
@@ -68,11 +79,20 @@ export const UsageStats: React.FC<UsageStatsProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-blue-100 rounded-xl">
-              <Crown className="h-6 w-6 text-blue-600" />
+              {isUnlimited(stats.plan_limit) ? (
+                <Infinity className="h-6 w-6 text-blue-600" />
+              ) : (
+                <Crown className="h-6 w-6 text-blue-600" />
+              )}
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">
                 Plan {getPlanDisplayName(stats.subscription_plan)}
+                {isUnlimited(stats.plan_limit) && (
+                  <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    Admin
+                  </span>
+                )}
               </h3>
               <p className="text-sm text-gray-600">Utilizare lunară</p>
             </div>
@@ -92,23 +112,32 @@ export const UsageStats: React.FC<UsageStatsProps> = ({
               <Target className="h-4 w-4 text-gray-600" />
               <span className="text-sm font-medium text-gray-700">Planuri de marketing</span>
             </div>
-            <div className={`px-2 py-1 rounded-lg text-xs font-medium ${getUsageColor(planUsagePercentage)}`}>
-              {stats.plans_this_month}/{stats.plan_limit > 0 ? stats.plan_limit : '∞'}
+            <div className={`px-2 py-1 rounded-lg text-xs font-medium ${getUsageColor(planUsagePercentage, isUnlimited(stats.plan_limit))}`}>
+              {formatLimit(stats.plans_this_month, stats.plan_limit)}
             </div>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(planUsagePercentage)}`}
-              style={{ 
-                width: `${Math.min(planUsagePercentage, 100)}%` 
-              }}
-            />
-          </div>
+          {!isUnlimited(stats.plan_limit) && (
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(planUsagePercentage, false)}`}
+                style={{ 
+                  width: `${Math.min(planUsagePercentage, 100)}%` 
+                }}
+              />
+            </div>
+          )}
           
-          {isNearPlanLimit && stats.plan_limit > 0 && (
+          {isNearPlanLimit && (
             <p className="text-xs text-amber-600">
               Ai folosit {Math.round(planUsagePercentage)}% din planurile disponibile
+            </p>
+          )}
+          
+          {isUnlimited(stats.plan_limit) && (
+            <p className="text-xs text-green-600 flex items-center space-x-1">
+              <Infinity className="h-3 w-3" />
+              <span>Acces nelimitat</span>
             </p>
           )}
         </div>
@@ -120,23 +149,32 @@ export const UsageStats: React.FC<UsageStatsProps> = ({
               <MessageSquare className="h-4 w-4 text-gray-600" />
               <span className="text-sm font-medium text-gray-700">Conținut generat</span>
             </div>
-            <div className={`px-2 py-1 rounded-lg text-xs font-medium ${getUsageColor(contentUsagePercentage)}`}>
-              {stats.content_this_month}/{stats.content_limit > 0 ? stats.content_limit : '∞'}
+            <div className={`px-2 py-1 rounded-lg text-xs font-medium ${getUsageColor(contentUsagePercentage, isUnlimited(stats.content_limit))}`}>
+              {formatLimit(stats.content_this_month, stats.content_limit)}
             </div>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(contentUsagePercentage)}`}
-              style={{ 
-                width: `${Math.min(contentUsagePercentage, 100)}%` 
-              }}
-            />
-          </div>
+          {!isUnlimited(stats.content_limit) && (
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(contentUsagePercentage, false)}`}
+                style={{ 
+                  width: `${Math.min(contentUsagePercentage, 100)}%` 
+                }}
+              />
+            </div>
+          )}
           
-          {isNearContentLimit && stats.content_limit > 0 && (
+          {isNearContentLimit && (
             <p className="text-xs text-amber-600">
               Ai folosit {Math.round(contentUsagePercentage)}% din conținutul disponibil
+            </p>
+          )}
+          
+          {isUnlimited(stats.content_limit) && (
+            <p className="text-xs text-green-600 flex items-center space-x-1">
+              <Infinity className="h-3 w-3" />
+              <span>Acces nelimitat</span>
             </p>
           )}
         </div>
