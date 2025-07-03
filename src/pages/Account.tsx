@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
+import { SubscriptionPlans } from '../components/SubscriptionPlans';
 
 interface UserProfile {
   id: string;
@@ -44,21 +45,30 @@ export const Account: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [activeTab, setActiveTab] = useState<'profile' | 'subscription' | 'billing'>('profile');
   const [formData, setFormData] = useState({
     fullName: '',
     email: ''
   });
 
-  // Check for success message from brand voice update
+  // Check for success message from brand voice update or subscription
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Clear the message after showing it
       setTimeout(() => setSuccessMessage(''), 5000);
-      // Clear the state to prevent showing the message again on refresh
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+
+    // Check for subscription success
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('success') === 'true') {
+      setSuccessMessage('Abonamentul a fost activat cu succes!');
+      setActiveTab('subscription');
+      setTimeout(() => setSuccessMessage(''), 5000);
+      // Clean URL
+      navigate('/app/account', { replace: true });
+    }
+  }, [location.state, location.search, navigate]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -149,6 +159,27 @@ export const Account: React.FC = () => {
     await signOut();
   };
 
+  const handleManageSubscription = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-portal-session', {
+        body: {
+          user_id: user.id,
+          return_url: `${window.location.origin}/app/account`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -168,11 +199,17 @@ export const Account: React.FC = () => {
   const planLimits = {
     free: { plans: 5, content: 50 },
     pro: { plans: 50, content: 500 },
-    premium: { plans: -1, content: -1 }
+    premium: { plans: 200, content: 2000 }
   };
 
   const currentPlan = subscription?.plan || 'free';
   const limits = planLimits[currentPlan as keyof typeof planLimits];
+
+  const tabs = [
+    { id: 'profile', name: 'Profil', icon: User },
+    { id: 'subscription', name: 'Abonament', icon: Crown },
+    { id: 'billing', name: 'Facturare', icon: CreditCard }
+  ];
 
   return (
     <div className="space-y-8">
@@ -210,184 +247,252 @@ export const Account: React.FC = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Settings */}
-        <Card className="lg:col-span-2 shadow-lg" animation="slideInLeft" hover="subtle">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-blue-100 rounded-xl">
-              <Settings className="h-6 w-6 text-blue-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Setări profil</h2>
-          </div>
+      {/* Tabs */}
+      <Card className="shadow-lg" animation="slideInLeft">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`
+                    flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                    ${activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </Card>
 
-          <div className="space-y-6">
-            <Input
-              label="Numele complet"
-              value={formData.fullName}
-              onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              placeholder="Introdu numele tău complet"
-              icon={User}
-            />
-
-            <Input
-              label="Adresa de email"
-              value={formData.email}
-              disabled
-              placeholder="Email-ul nu poate fi modificat"
-              icon={Mail}
-            />
-
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSaveProfile}
-                loading={saving}
-                className="flex items-center space-x-2"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Salvează modificările</span>
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        {/* Brand Voice Summary */}
-        <Card className="shadow-lg" animation="slideInRight" hover="subtle">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleEditBrandVoice}
-              className="flex items-center space-x-2 micro-bounce"
-            >
-              <Edit3 className="h-4 w-4" />
-              <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
-            </Button>
-          </div>
-          
-          {brandProfile ? (
-            <>
-              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-100" animation="scaleIn" delay={1}>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{brandProfile.brand_name}</h3>
-                <p className="text-gray-700 mb-4 text-sm leading-relaxed">{brandProfile.brand_description}</p>
-                
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Personalitate:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {brandProfile.personality_traits?.slice(0, 2).map((trait, index) => (
-                        <span 
-                          key={index} 
-                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                        >
-                          {trait}
-                        </span>
-                      ))}
-                      {brandProfile.personality_traits?.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          +{brandProfile.personality_traits.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">Ton:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {brandProfile.communication_tones?.slice(0, 2).map((tone, index) => (
-                        <span 
-                          key={index} 
-                          className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
-                        >
-                          {tone}
-                        </span>
-                      ))}
-                      {brandProfile.communication_tones?.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                          +{brandProfile.communication_tones.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-blue-200">
-                  <p className="text-xs text-gray-500">
-                    Ultima actualizare: {new Date(brandProfile.updated_at).toLocaleDateString('ro-RO')}
-                  </p>
-                </div>
-              </Card>
-
-              {/* Quick Actions for Brand Voice */}
-              <Card className="mt-4 bg-gradient-to-r from-green-50 to-blue-50 border-green-200" animation="scaleIn" delay={2}>
-                <div className="text-center">
-                  <h4 className="font-semibold text-gray-900 mb-2">Acțiuni rapide</h4>
-                  <div className="space-y-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full micro-bounce"
-                      onClick={handleEditBrandVoice}
-                    >
-                      <Edit3 className="h-4 w-4 mr-2" />
-                      Îmbunătățește vocea brandului
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full micro-bounce"
-                      onClick={() => navigate('/app/dashboard')}
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Generează conținut nou
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </>
-          ) : (
-            <Card className="text-center py-8" animation="bounceIn">
-              <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl mb-4 inline-block">
-                <Sparkles className="h-8 w-8 text-blue-600" />
+      {/* Tab Content */}
+      {activeTab === 'profile' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Settings */}
+          <Card className="lg:col-span-2 shadow-lg" animation="slideInLeft" hover="subtle">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <Settings className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Definește vocea brandului</h3>
-              <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                Ajută-ne să înțelegem personalitatea și tonul brandului tău pentru a genera conținut personalizat.
-              </p>
-              <Button 
-                className="flex items-center space-x-2 micro-bounce"
-                onClick={handleEditBrandVoice}
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Începe configurarea</span>
-              </Button>
-            </Card>
-          )}
+              <h2 className="text-2xl font-bold text-gray-900">Setări profil</h2>
+            </div>
 
-          {/* Subscription Status */}
-          <Card className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200" animation="scaleIn" delay={3}>
+            <div className="space-y-6">
+              <Input
+                label="Numele complet"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Introdu numele tău complet"
+                icon={User}
+              />
+
+              <Input
+                label="Adresa de email"
+                value={formData.email}
+                disabled
+                placeholder="Email-ul nu poate fi modificat"
+                icon={Mail}
+              />
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSaveProfile}
+                  loading={saving}
+                  className="flex items-center space-x-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Salvează modificările</span>
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Brand Voice Summary */}
+          <Card className="shadow-lg" animation="slideInRight" hover="subtle">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Vocea brandului</h2>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleEditBrandVoice}
+                className="flex items-center space-x-2 micro-bounce"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span>{brandProfile ? 'Editează' : 'Configurează'}</span>
+              </Button>
+            </div>
+            
+            {brandProfile ? (
+              <>
+                <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-100" animation="scaleIn" delay={1}>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{brandProfile.brand_name}</h3>
+                  <p className="text-gray-700 mb-4 text-sm leading-relaxed">{brandProfile.brand_description}</p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2 text-sm">Personalitate:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {brandProfile.personality_traits?.slice(0, 2).map((trait, index) => (
+                          <span 
+                            key={index} 
+                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                          >
+                            {trait}
+                          </span>
+                        ))}
+                        {brandProfile.personality_traits?.length > 2 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                            +{brandProfile.personality_traits.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2 text-sm">Ton:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {brandProfile.communication_tones?.slice(0, 2).map((tone, index) => (
+                          <span 
+                            key={index} 
+                            className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                          >
+                            {tone}
+                          </span>
+                        ))}
+                        {brandProfile.communication_tones?.length > 2 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                            +{brandProfile.communication_tones.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <p className="text-xs text-gray-500">
+                      Ultima actualizare: {new Date(brandProfile.updated_at).toLocaleDateString('ro-RO')}
+                    </p>
+                  </div>
+                </Card>
+              </>
+            ) : (
+              <Card className="text-center py-8" animation="bounceIn">
+                <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl mb-4 inline-block">
+                  <Sparkles className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Definește vocea brandului</h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  Ajută-ne să înțelegem personalitatea și tonul brandului tău pentru a genera conținut personalizat.
+                </p>
+                <Button 
+                  className="flex items-center space-x-2 micro-bounce"
+                  onClick={handleEditBrandVoice}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Începe configurarea</span>
+                </Button>
+              </Card>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {activeTab === 'subscription' && (
+        <div className="space-y-8">
+          {/* Current Subscription Status */}
+          <Card className="shadow-lg bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200" animation="scaleIn">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <Crown className="h-5 w-5 text-amber-600" />
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-amber-100 rounded-xl">
+                  <Crown className="h-8 w-8 text-amber-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 text-sm">Plan {currentPlan}</h4>
-                  <p className="text-xs text-gray-600">
+                  <h3 className="text-2xl font-bold text-gray-900">Plan {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</h3>
+                  <p className="text-gray-600">
                     {subscription?.plans_generated_this_month || 0}
-                    {limits.plans > 0 ? `/${limits.plans}` : '/∞'} planuri
+                    {limits.plans > 0 ? `/${limits.plans}` : '/∞'} planuri folosite luna aceasta
                   </p>
                 </div>
               </div>
-              {currentPlan === 'free' && (
-                <Button size="sm" variant="secondary" className="micro-bounce">
-                  Upgrade
+              {currentPlan !== 'free' && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleManageSubscription}
+                  className="flex items-center space-x-2"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Gestionează abonamentul</span>
                 </Button>
               )}
             </div>
           </Card>
+
+          {/* Subscription Plans */}
+          <SubscriptionPlans 
+            currentPlan={currentPlan}
+            showCurrentPlan={true}
+          />
+        </div>
+      )}
+
+      {activeTab === 'billing' && (
+        <Card className="shadow-lg" animation="slideInLeft">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-2 bg-green-100 rounded-xl">
+              <CreditCard className="h-6 w-6 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Facturare și plăți</h2>
+          </div>
+
+          {currentPlan === 'free' ? (
+            <div className="text-center py-12">
+              <div className="p-4 bg-gray-100 rounded-2xl mb-4 inline-block">
+                <CreditCard className="h-12 w-12 text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Nu ai un abonament activ
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Ești pe planul gratuit. Upgrade pentru a accesa funcționalități avansate.
+              </p>
+              <Button 
+                onClick={() => setActiveTab('subscription')}
+                className="flex items-center space-x-2"
+              >
+                <Crown className="h-4 w-4" />
+                <span>Vezi planurile</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 className="font-semibold text-blue-900 mb-2">Abonament activ</h4>
+                <p className="text-blue-700">
+                  Ai un abonament {currentPlan} activ. Pentru a gestiona metodele de plată, 
+                  facturile și alte setări de facturare, folosește portalul Stripe.
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleManageSubscription}
+                className="flex items-center space-x-2"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Deschide portalul de facturare</span>
+              </Button>
+            </div>
+          )}
         </Card>
-      </div>
+      )}
 
       {/* Additional Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

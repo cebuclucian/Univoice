@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Onboarding } from './pages/Onboarding';
 import { Account } from './pages/Account';
 import { MarketingPlans } from './pages/MarketingPlans';
+import { Pricing } from './pages/Pricing';
 import { Home } from './pages/Home';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
@@ -29,6 +30,7 @@ function App() {
                 <Auth />
               </PublicRoute>
             } />
+            <Route path="/pricing" element={<Pricing />} />
             
             {/* Direct dashboard route for backward compatibility */}
             <Route path="/dashboard" element={
