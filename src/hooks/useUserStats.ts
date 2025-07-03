@@ -28,7 +28,7 @@ export const useUserStats = () => {
       setError(null);
 
       const { data, error: rpcError } = await supabase
-        .rpc('get_user_stats', { user_id: user.id });
+        .rpc('get_user_stats', { input_user_id: user.id });
 
       if (rpcError) throw rpcError;
 
