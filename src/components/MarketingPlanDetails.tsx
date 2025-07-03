@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Calendar, Target, Users, TrendingUp, BarChart3, Clock, 
   CheckCircle, ArrowLeft, Edit3, Share2, Download, Brain,
   Lightbulb, Zap, MessageSquare, Instagram, Facebook, 
-  Twitter, Mail, Globe, Youtube, Music, Monitor
+  Twitter, Mail, Globe, Youtube, Music, Monitor, Copy,
+  CheckSquare, AlertCircle, Info, Clipboard, FileText
 } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
@@ -27,6 +28,11 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   onEdit
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'calendar' | 'content' | 'analytics'>('overview');
+  const [copiedContentId, setCopiedContentId] = useState<string | null>(null);
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'json' | 'text' | 'calendar'>('text');
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const exportLinkRef = useRef<HTMLAnchorElement>(null);
 
   const getPlatformIcon = (platformName: string) => {
     const name = platformName.toLowerCase();
@@ -59,6 +65,203 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     { id: 'content', name: 'Conținut generat', icon: MessageSquare },
     { id: 'analytics', name: 'Metrici & KPI', icon: BarChart3 }
   ];
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedContentId(id);
+      setTimeout(() => setCopiedContentId(null), 2000);
+    });
+  };
+
+  const handleExport = () => {
+    if (!plan) return;
+
+    let exportData: string;
+    let fileName: string;
+    let mimeType: string;
+
+    switch (exportFormat) {
+      case 'json':
+        exportData = JSON.stringify(plan, null, 2);
+        fileName = `${plan.title.replace(/\s+/g, '_')}_plan.json`;
+        mimeType = 'application/json';
+        break;
+      case 'calendar':
+        exportData = generateCalendarExport();
+        fileName = `${plan.title.replace(/\s+/g, '_')}_calendar.txt`;
+        mimeType = 'text/plain';
+        break;
+      case 'text':
+      default:
+        exportData = generateTextExport();
+        fileName = `${plan.title.replace(/\s+/g, '_')}_plan.txt`;
+        mimeType = 'text/plain';
+        break;
+    }
+
+    const blob = new Blob([exportData], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+
+    if (exportLinkRef.current) {
+      exportLinkRef.current.href = url;
+      exportLinkRef.current.download = fileName;
+      exportLinkRef.current.click();
+      URL.revokeObjectURL(url);
+    }
+
+    setShowExportOptions(false);
+  };
+
+  const generateTextExport = () => {
+    const { title, details, created_at } = plan;
+    const createdDate = new Date(created_at).toLocaleDateString('ro-RO');
+    
+    let text = `PLAN DE MARKETING: ${title}\n`;
+    text += `Creat pe: ${createdDate}\n\n`;
+    
+    // Summary
+    text += `REZUMAT EXECUTIV:\n${details?.summary || 'N/A'}\n\n`;
+    
+    // Objectives
+    text += 'OBIECTIVE:\n';
+    if (details?.objectives && details.objectives.length > 0) {
+      details.objectives.forEach((obj: string, i: number) => {
+        text += `${i+1}. ${obj}\n`;
+      });
+    } else {
+      text += 'N/A\n';
+    }
+    text += '\n';
+    
+    // Target Audience
+    text += 'AUDIENȚA ȚINTĂ:\n';
+    if (details?.target_audience) {
+      text += `Principală: ${details.target_audience.primary || 'N/A'}\n`;
+      if (details.target_audience.demographics) {
+        text += `Demografie: ${details.target_audience.demographics}\n`;
+      }
+      if (details.target_audience.pain_points && details.target_audience.pain_points.length > 0) {
+        text += 'Puncte de durere:\n';
+        details.target_audience.pain_points.forEach((point: string, i: number) => {
+          text += `- ${point}\n`;
+        });
+      }
+    } else {
+      text += 'N/A\n';
+    }
+    text += '\n';
+    
+    // Strategy
+    text += 'STRATEGIE:\n';
+    if (details?.strategy) {
+      if (details.strategy.positioning) {
+        text += `Poziționare: ${details.strategy.positioning}\n`;
+      }
+      if (details.strategy.key_messages && details.strategy.key_messages.length > 0) {
+        text += 'Mesaje cheie:\n';
+        details.strategy.key_messages.forEach((msg: string, i: number) => {
+          text += `- ${msg}\n`;
+        });
+      }
+      if (details.strategy.content_pillars && details.strategy.content_pillars.length > 0) {
+        text += 'Piloni de conținut: ' + details.strategy.content_pillars.join(', ') + '\n';
+      }
+    } else {
+      text += 'N/A\n';
+    }
+    text += '\n';
+    
+    // Platforms
+    text += 'PLATFORME:\n';
+    if (details?.platforms && details.platforms.length > 0) {
+      details.platforms.forEach((platform: any, i: number) => {
+        text += `${i+1}. ${platform.name}\n`;
+        text += `   Strategie: ${platform.strategy}\n`;
+        if (platform.content_types) {
+          text += `   Tipuri conținut: ${platform.content_types.join(', ')}\n`;
+        }
+        if (platform.posting_frequency) {
+          text += `   Frecvență: ${platform.posting_frequency}\n`;
+        }
+        text += '\n';
+      });
+    } else {
+      text += 'N/A\n';
+    }
+    text += '\n';
+    
+    // Content Calendar
+    text += 'CALENDAR DE CONȚINUT:\n';
+    if (details?.content_calendar && details.content_calendar.length > 0) {
+      details.content_calendar.forEach((week: any) => {
+        text += `Săptămâna ${week.week}:\n`;
+        if (week.content && week.content.length > 0) {
+          week.content.forEach((content: any, i: number) => {
+            text += `${i+1}. ${content.platform} - ${content.type}\n`;
+            text += `   Titlu: ${content.title}\n`;
+            text += `   Descriere: ${content.description}\n`;
+            if (content.hashtags) {
+              text += `   Hashtag-uri: ${content.hashtags.join(' ')}\n`;
+            }
+            if (content.call_to_action) {
+              text += `   CTA: ${content.call_to_action}\n`;
+            }
+            text += '\n';
+          });
+        } else {
+          text += '   Nu există conținut planificat\n\n';
+        }
+      });
+    } else {
+      text += 'N/A\n';
+    }
+    
+    return text;
+  };
+
+  const generateCalendarExport = () => {
+    const { title, details } = plan;
+    
+    let text = `CALENDAR DE CONȚINUT: ${title}\n\n`;
+    
+    if (details?.content_calendar && details.content_calendar.length > 0) {
+      details.content_calendar.forEach((week: any) => {
+        text += `SĂPTĂMÂNA ${week.week}\n`;
+        text += '='.repeat(20) + '\n\n';
+        
+        if (week.content && week.content.length > 0) {
+          week.content.forEach((content: any) => {
+            text += `${content.platform.toUpperCase()} | ${content.type}\n`;
+            text += '-'.repeat(40) + '\n';
+            text += `Titlu: ${content.title}\n`;
+            text += `Descriere: ${content.description}\n`;
+            
+            if (content.hashtags && content.hashtags.length > 0) {
+              text += `Hashtag-uri: ${content.hashtags.join(' ')}\n`;
+            }
+            
+            if (content.call_to_action) {
+              text += `Call to Action: ${content.call_to_action}\n`;
+            }
+            
+            text += '\n';
+          });
+        } else {
+          text += 'Nu există conținut planificat pentru această săptămână.\n\n';
+        }
+        
+        text += '\n';
+      });
+    } else {
+      text += 'Nu există un calendar de conținut definit pentru acest plan.\n';
+    }
+    
+    return text;
+  };
+
+  const handleShare = () => {
+    setShowShareOptions(!showShareOptions);
+  };
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -307,9 +510,34 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                 animation="fadeInUp"
                 delay={weekIndex + 1}
               >
-                <h4 className="font-bold text-gray-900 mb-4">
-                  Săptămâna {week.week}
-                </h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-gray-900">
+                    Săptămâna {week.week}
+                  </h4>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const weekContent = week.content?.map((c: any) => 
+                        `${c.platform} (${c.type}): ${c.title}\n${c.description}\n${c.hashtags ? c.hashtags.join(' ') : ''}\n${c.call_to_action || ''}`
+                      ).join('\n\n');
+                      copyToClipboard(weekContent, `week-${weekIndex}`);
+                    }}
+                    className="flex items-center space-x-1"
+                  >
+                    {copiedContentId === `week-${weekIndex}` ? (
+                      <>
+                        <CheckSquare className="h-3 w-3" />
+                        <span>Copiat!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copiază săptămâna</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {week.content?.map((content: any, contentIndex: number) => (
@@ -319,29 +547,43 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                       padding="sm"
                       hover="subtle"
                     >
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className={`p-1 rounded ${getPlatformColor(content.platform)}`}>
-                          {getPlatformIcon(content.platform)}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className={`p-1 rounded ${getPlatformColor(content.platform)}`}>
+                            {getPlatformIcon(content.platform)}
+                          </div>
+                          <span className="font-semibold text-gray-900 text-sm">
+                            {content.platform}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {content.type}
+                          </span>
                         </div>
-                        <span className="font-semibold text-gray-900 text-sm">
-                          {content.platform}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {content.type}
-                        </span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => copyToClipboard(content.description, `content-${weekIndex}-${contentIndex}`)}
+                          className="p-1 h-6 w-6"
+                        >
+                          {copiedContentId === `content-${weekIndex}-${contentIndex}` ? (
+                            <CheckSquare className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
                       </div>
                       
                       <h5 className="font-semibold text-gray-800 mb-2 text-sm">
                         {content.title}
                       </h5>
                       
-                      <p className="text-gray-700 text-xs mb-3 line-clamp-3">
+                      <div className="bg-white p-2 rounded-md border border-gray-100 mb-3 text-xs text-gray-700 max-h-24 overflow-y-auto">
                         {content.description}
-                      </p>
+                      </div>
                       
                       {content.hashtags && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {content.hashtags.slice(0, 3).map((hashtag: string, hashIndex: number) => (
+                          {content.hashtags.map((hashtag: string, hashIndex: number) => (
                             <span 
                               key={hashIndex}
                               className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
@@ -349,17 +591,13 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                               {hashtag}
                             </span>
                           ))}
-                          {content.hashtags.length > 3 && (
-                            <span className="text-xs text-gray-500">
-                              +{content.hashtags.length - 3}
-                            </span>
-                          )}
                         </div>
                       )}
                       
                       {content.call_to_action && (
-                        <div className="text-xs text-gray-600 italic">
-                          CTA: {content.call_to_action}
+                        <div className="text-xs text-gray-600 italic flex items-center space-x-1">
+                          <Zap className="h-3 w-3 text-amber-500" />
+                          <span>CTA: {content.call_to_action}</span>
                         </div>
                       )}
                     </Card>
@@ -381,6 +619,23 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
             </p>
           </Card>
         )}
+
+        {/* Export Calendar Button */}
+        {plan.details?.content_calendar && (
+          <div className="mt-6 flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setExportFormat('calendar');
+                handleExport();
+              }}
+              className="flex items-center space-x-2"
+            >
+              <Download className="h-4 w-4" />
+              <span>Exportă calendarul</span>
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
@@ -398,21 +653,118 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
         </div>
 
-        <Card className="text-center py-8" animation="bounceIn">
-          <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl mb-4 inline-block">
-            <Zap className="h-8 w-8 text-purple-600" />
+        {plan.details?.platforms && plan.details.platforms.length > 0 ? (
+          <div className="space-y-8">
+            {plan.details.platforms.map((platform: any, platformIndex: number) => (
+              <Card 
+                key={platformIndex}
+                className={`border-l-4 ${getPlatformColor(platform.name).includes('blue') ? 'border-blue-400' : 
+                  getPlatformColor(platform.name).includes('pink') ? 'border-pink-400' :
+                  getPlatformColor(platform.name).includes('sky') ? 'border-sky-400' :
+                  getPlatformColor(platform.name).includes('indigo') ? 'border-indigo-400' :
+                  'border-gray-400'
+                }`}
+                padding="md"
+                animation="fadeInUp"
+                delay={platformIndex + 1}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${getPlatformColor(platform.name)}`}>
+                      {getPlatformIcon(platform.name)}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{platform.name}</h4>
+                      <p className="text-xs text-gray-600">{platform.posting_frequency || 'Frecvență variabilă'}</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const platformContent = `Strategie ${platform.name}:\n${platform.strategy}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}`;
+                      copyToClipboard(platformContent, `platform-${platformIndex}`);
+                    }}
+                    className="flex items-center space-x-1"
+                  >
+                    {copiedContentId === `platform-${platformIndex}` ? (
+                      <>
+                        <CheckSquare className="h-3 w-3" />
+                        <span>Copiat!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copiază strategia</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-100 mb-4">
+                  <h5 className="font-medium text-gray-800 mb-2">Strategie:</h5>
+                  <p className="text-gray-700 text-sm">{platform.strategy}</p>
+                </div>
+                
+                {plan.details?.content_calendar && (
+                  <div className="space-y-4">
+                    <h5 className="font-medium text-gray-800">Exemple de conținut:</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {plan.details.content_calendar
+                        .flatMap((week: any) => week.content || [])
+                        .filter((content: any) => content.platform.toLowerCase() === platform.name.toLowerCase())
+                        .slice(0, 4)
+                        .map((content: any, contentIndex: number) => (
+                          <Card 
+                            key={contentIndex}
+                            className="bg-gray-50"
+                            padding="sm"
+                            hover="subtle"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-gray-700">{content.type}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => copyToClipboard(content.description, `platform-content-${platformIndex}-${contentIndex}`)}
+                                className="p-1 h-6 w-6"
+                              >
+                                {copiedContentId === `platform-content-${platformIndex}-${contentIndex}` ? (
+                                  <CheckSquare className="h-3 w-3 text-green-600" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                            <h6 className="font-medium text-gray-800 text-sm mb-1">{content.title}</h6>
+                            <p className="text-xs text-gray-600 line-clamp-3">{content.description}</p>
+                          </Card>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">
-            Generator de conținut
-          </h4>
-          <p className="text-gray-600 mb-4">
-            Funcționalitatea de generare automată a conținutului va fi disponibilă în curând
-          </p>
-          <Button className="flex items-center space-x-2">
-            <Zap className="h-4 w-4" />
-            <span>Generează conținut</span>
-          </Button>
-        </Card>
+        ) : (
+          <Card className="text-center py-8" animation="bounceIn">
+            <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl mb-4 inline-block">
+              <Zap className="h-8 w-8 text-purple-600" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">
+              Generator de conținut
+            </h4>
+            <p className="text-gray-600 mb-4">
+              Funcționalitatea de generare automată a conținutului va fi disponibilă în curând
+            </p>
+            <Button className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span>Generează conținut</span>
+            </Button>
+          </Card>
+        )}
       </Card>
     </div>
   );
@@ -447,6 +799,28 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     {kpi.target}
                   </div>
                   <p className="text-gray-600 text-sm">{kpi.measurement}</p>
+                  
+                  {/* Visual indicator */}
+                  <div className="mt-4 pt-4 border-t border-orange-200">
+                    <div className="flex items-center justify-center space-x-2">
+                      {index % 3 === 0 ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-xs text-green-600">În creștere</span>
+                        </>
+                      ) : index % 3 === 1 ? (
+                        <>
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <span className="text-xs text-amber-600">Necesită atenție</span>
+                        </>
+                      ) : (
+                        <>
+                          <Info className="h-4 w-4 text-blue-600" />
+                          <span className="text-xs text-blue-600">Monitorizare</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -464,6 +838,32 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
             </p>
           </Card>
         )}
+
+        {/* KPI Recommendations */}
+        <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" animation="fadeInUp">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Lightbulb className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Recomandări pentru măsurare</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Setează obiective SMART (Specifice, Măsurabile, Realizabile, Relevante, Încadrate în Timp)</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Monitorizează atât metrici de vanitate (reach, likes) cât și metrici de conversie</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Evaluează performanța la fiecare 2 săptămâni și ajustează strategia dacă e necesar</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </Card>
       </Card>
     </div>
   );
@@ -491,14 +891,107 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
           
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" className="flex items-center space-x-2">
-              <Share2 className="h-4 w-4" />
-              <span>Partajează</span>
-            </Button>
-            <Button variant="outline" size="sm" className="flex items-center space-x-2">
-              <Download className="h-4 w-4" />
-              <span>Export</span>
-            </Button>
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleShare}
+                className="flex items-center space-x-2"
+              >
+                <Share2 className="h-4 w-4" />
+                <span>Partajează</span>
+              </Button>
+              
+              {showShareOptions && (
+                <Card className="absolute right-0 top-full mt-2 z-10 shadow-xl" padding="sm">
+                  <div className="space-y-2 w-48">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/app/plans?id=${plan.id}`);
+                        setShowShareOptions(false);
+                      }}
+                    >
+                      <Clipboard className="h-4 w-4 mr-2" />
+                      <span>Copiază link</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        window.open(`mailto:?subject=Plan de marketing: ${plan.title}&body=Iată planul de marketing generat: ${window.location.origin}/app/plans?id=${plan.id}`);
+                        setShowShareOptions(false);
+                      }}
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      <span>Trimite pe email</span>
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </div>
+            
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowExportOptions(!showExportOptions)}
+                className="flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
+              
+              {showExportOptions && (
+                <Card className="absolute right-0 top-full mt-2 z-10 shadow-xl" padding="sm">
+                  <div className="space-y-2 w-48">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setExportFormat('text');
+                        handleExport();
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      <span>Export ca Text</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setExportFormat('json');
+                        handleExport();
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      <span>Export ca JSON</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setExportFormat('calendar');
+                        handleExport();
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>Export Calendar</span>
+                    </Button>
+                  </div>
+                </Card>
+              )}
+              
+              {/* Hidden download link */}
+              <a ref={exportLinkRef} style={{ display: 'none' }} />
+            </div>
+            
             {onEdit && (
               <Button size="sm" onClick={onEdit} className="flex items-center space-x-2">
                 <Edit3 className="h-4 w-4" />
@@ -512,7 +1005,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
       {/* Tabs */}
       <Card className="shadow-lg" animation="slideInLeft">
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -520,7 +1013,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                    flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
                     ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
