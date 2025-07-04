@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { 
-  Calendar, Target, Users, TrendingUp, BarChart3, Clock, 
+  Calendar, Target, Users, TrendingUp, BarChart3, 
   CheckCircle, ArrowLeft, Edit3, Share2, Download, Brain,
   Lightbulb, Zap, MessageSquare, Instagram, Facebook, 
   Twitter, Mail, Globe, Youtube, Music, Monitor, Copy,
@@ -38,6 +38,13 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
 
   // Debug: Log the plan details to understand the structure
   console.log('Plan details structure:', plan.details);
+
+  // Use onPlanUpdated when plan is successfully updated
+  const handlePlanUpdate = (updatedPlan: MarketingPlan) => {
+    if (onPlanUpdated) {
+      onPlanUpdated(updatedPlan);
+    }
+  };
 
   const getPlatformIcon = (platformName: string) => {
     if (!platformName) return <MessageSquare className="h-4 w-4" />;
