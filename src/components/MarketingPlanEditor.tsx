@@ -85,7 +85,7 @@ export const MarketingPlanEditor: React.FC<MarketingPlanEditorProps> = ({
         edited_by: user.id
       };
 
-      const { data, error: updateError } = await supabase
+      const { data: _, error: updateError } = await supabase
         .from('marketing_plans')
         .update({
           title: editedPlan.title,
