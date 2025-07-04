@@ -5,8 +5,8 @@ import {
   Lightbulb, Zap, MessageSquare, Instagram, Facebook, 
   Twitter, Mail, Globe, Youtube, Music, Monitor, Copy,
   CheckSquare, AlertCircle, Info, Clipboard, FileText,
-  Star, Award, DollarSign, Eye, MousePointer, Heart,
-  UserCheck, Settings, Shield, Briefcase, PieChart
+  Star, Award, DollarSign, Eye, Heart, MousePointer,
+  Megaphone, PieChart, Activity, Settings, Shield
 } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
@@ -32,8 +32,9 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'strategy' | 'calendar' | 'content' | 'analytics' | 'monitoring'>('overview');
   const [copiedContentId, setCopiedContentId] = useState<string | null>(null);
   const [showExportOptions, setShowExportOptions] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'json' | 'text' | 'calendar' | 'excel'>('text');
+  const [exportFormat, setExportFormat] = useState<'json' | 'text' | 'calendar'>('text');
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const exportLinkRef = useRef<HTMLAnchorElement>(null);
 
   const getPlatformIcon = (platformName: string) => {
@@ -67,7 +68,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     { id: 'calendar', name: 'Calendar editorial', icon: Calendar },
     { id: 'content', name: 'Conținut detaliat', icon: MessageSquare },
     { id: 'analytics', name: 'Metrici & ROI', icon: BarChart3 },
-    { id: 'monitoring', name: 'Monitorizare', icon: Settings }
+    { id: 'monitoring', name: 'Monitorizare', icon: Activity }
   ];
 
   const copyToClipboard = (text: string, id: string) => {
@@ -94,11 +95,6 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
         exportData = generateCalendarExport();
         fileName = `${plan.title.replace(/\s+/g, '_')}_calendar.txt`;
         mimeType = 'text/plain';
-        break;
-      case 'excel':
-        exportData = generateExcelExport();
-        fileName = `${plan.title.replace(/\s+/g, '_')}_excel.csv`;
-        mimeType = 'text/csv';
         break;
       case 'text':
       default:
@@ -136,55 +132,45 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     if (details?.brand_voice_used) {
       text += 'VOCEA BRANDULUI FOLOSITĂ:\n';
       text += `Personalitate: ${Array.isArray(details.brand_voice_used.personality) ? details.brand_voice_used.personality.join(', ') : details.brand_voice_used.personality}\n`;
-      text += `Ton: ${Array.isArray(details.brand_voice_used.tone) ? details.brand_voice_used.tone.join(', ') : details.brand_voice_used.tone}\n\n`;
+      text += `Ton: ${Array.isArray(details.brand_voice_used.tone) ? details.brand_voice_used.tone.join(', ') : details.brand_voice_used.tone}\n`;
+      text += `Timestamp: ${details.brand_voice_used.timestamp}\n\n`;
     }
     
     // Identity and Voice
     if (details?.identity_and_voice) {
       text += 'IDENTITATEA ȘI VOCEA BRANDULUI:\n';
-      text += `Identitate: ${details.identity_and_voice.brand_identity || 'N/A'}\n`;
-      text += `Poziționare: ${details.identity_and_voice.brand_positioning || 'N/A'}\n`;
-      if (details.identity_and_voice.voice_characteristics) {
-        text += `Caracteristici voce: ${details.identity_and_voice.voice_characteristics.tone || 'N/A'}\n`;
-        text += `Valori: ${Array.isArray(details.identity_and_voice.voice_characteristics.values) ? details.identity_and_voice.voice_characteristics.values.join(', ') : 'N/A'}\n`;
-      }
-      text += '\n';
+      text += `Identitate: ${details.identity_and_voice.brand_identity}\n`;
+      text += `Poziționare: ${details.identity_and_voice.brand_positioning}\n\n`;
     }
     
     // KPIs SMART
-    if (details?.kpis_smart && details.kpis_smart.length > 0) {
+    if (details?.kpis_smart) {
       text += 'KPI-URI SMART:\n';
       details.kpis_smart.forEach((kpi: any, i: number) => {
-        text += `${i+1}. ${kpi.name || 'N/A'}\n`;
-        text += `   Descriere: ${kpi.description || 'N/A'}\n`;
-        text += `   Țintă: ${kpi.target_value || 'N/A'}\n`;
-        text += `   Măsurare: ${kpi.measurement_method || 'N/A'}\n`;
-        text += `   Perioada: ${kpi.timeframe || 'N/A'}\n`;
-        text += `   Responsabil: ${kpi.responsible || 'N/A'}\n\n`;
+        text += `${i+1}. ${kpi.name}\n`;
+        text += `   Descriere: ${kpi.description}\n`;
+        text += `   Țintă: ${kpi.target_value}\n`;
+        text += `   Măsurare: ${kpi.measurement_method}\n`;
+        text += `   Perioada: ${kpi.timeframe}\n\n`;
       });
     }
     
     // Buyer Personas
-    if (details?.buyer_personas && details.buyer_personas.length > 0) {
+    if (details?.buyer_personas) {
       text += 'BUYER PERSONAS:\n';
       details.buyer_personas.forEach((persona: any, i: number) => {
-        text += `${i+1}. ${persona.name || 'Persona'}\n`;
-        if (persona.demographics) {
-          text += `   Demografia: ${persona.demographics.age_range || 'N/A'}, ${persona.demographics.location || 'N/A'}\n`;
-          text += `   Ocupație: ${persona.demographics.occupation || 'N/A'}\n`;
-        }
-        if (persona.psychographics) {
-          text += `   Interese: ${Array.isArray(persona.psychographics.interests) ? persona.psychographics.interests.join(', ') : 'N/A'}\n`;
-          text += `   Puncte de durere: ${Array.isArray(persona.psychographics.pain_points) ? persona.psychographics.pain_points.join(', ') : 'N/A'}\n`;
-        }
-        text += '\n';
+        text += `${i+1}. ${persona.name}\n`;
+        text += `   Vârstă: ${persona.demographics?.age_range}\n`;
+        text += `   Locație: ${persona.demographics?.location}\n`;
+        text += `   Interese: ${persona.psychographics?.interests?.join(', ')}\n`;
+        text += `   Platforme preferate: ${persona.digital_behavior?.preferred_platforms?.join(', ')}\n\n`;
       });
     }
     
     // Budget Allocation
     if (details?.budget_allocation_summary) {
       text += 'ALOCAREA BUGETULUI:\n';
-      text += `Buget total: ${details.budget_allocation_summary.total_budget || 'N/A'}\n`;
+      text += `Buget total: ${details.budget_allocation_summary.total_budget}\n`;
       if (details.budget_allocation_summary.allocation_by_channel) {
         text += 'Alocare pe canale:\n';
         details.budget_allocation_summary.allocation_by_channel.forEach((channel: any) => {
@@ -194,59 +180,16 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
       text += '\n';
     }
     
-    // Tactical Plan per Platform
-    if (details?.tactical_plan_per_platform && details.tactical_plan_per_platform.length > 0) {
+    // Tactical Plan Per Platform
+    if (details?.tactical_plan_per_platform) {
       text += 'PLANUL TACTIC PE PLATFORME:\n';
-      details.tactical_plan_per_platform.forEach((platform: any) => {
-        text += `\n${platform.platform.toUpperCase()}:\n`;
-        text += `Strategie: ${platform.strategy || 'N/A'}\n`;
-        text += `Frecvență postări: ${platform.posting_frequency || 'N/A'}\n`;
-        text += `Tipuri conținut: ${Array.isArray(platform.content_types) ? platform.content_types.join(', ') : 'N/A'}\n`;
-        
-        // Editorial Calendar
-        if (platform.editorial_calendar && platform.editorial_calendar.month_1) {
-          text += '\nCalendar editorial:\n';
-          platform.editorial_calendar.month_1.forEach((week: any) => {
-            text += `Săptămâna ${week.week}:\n`;
-            if (week.posts && week.posts.length > 0) {
-              week.posts.forEach((post: any, postIndex: number) => {
-                text += `  Post ${postIndex + 1} (${post.post_id}):\n`;
-                text += `    Data: ${post.scheduled_date}\n`;
-                if (post.copy) {
-                  text += `    Text: ${post.copy.main_text}\n`;
-                  text += `    CTA: ${post.copy.call_to_action}\n`;
-                  text += `    Hashtags: ${Array.isArray(post.copy.hashtags) ? post.copy.hashtags.join(' ') : 'N/A'}\n`;
-                }
-                if (post.visual_brief) {
-                  text += `    Brief vizual: ${post.visual_brief.type}, ${post.visual_brief.dimensions}\n`;
-                }
-                text += `    Buget promovare: ${post.promotion_budget || 'N/A'}\n\n`;
-              });
-            }
-          });
-        }
+      details.tactical_plan_per_platform.forEach((platform: any, i: number) => {
+        text += `${i+1}. ${platform.platform}\n`;
+        text += `   Strategie: ${platform.strategy}\n`;
+        text += `   Tipuri conținut: ${platform.content_types?.join(', ')}\n`;
+        text += `   Frecvență: ${platform.posting_frequency}\n`;
+        text += `   Ore optime: ${platform.optimal_posting_times?.join(', ')}\n\n`;
       });
-    }
-    
-    // Monitoring and Optimization
-    if (details?.monitoring_and_optimization) {
-      text += '\nMONITORIZARE ȘI OPTIMIZARE:\n';
-      
-      if (details.monitoring_and_optimization.weekly_dashboard_metrics) {
-        text += 'Metrici dashboard săptămânal:\n';
-        details.monitoring_and_optimization.weekly_dashboard_metrics.forEach((metric: any) => {
-          text += `- ${metric.metric}: ${metric.target_value} (${metric.measurement_frequency})\n`;
-        });
-        text += '\n';
-      }
-      
-      if (details.monitoring_and_optimization.dedicated_responsibilities) {
-        text += 'Responsabilități:\n';
-        details.monitoring_and_optimization.dedicated_responsibilities.forEach((role: any) => {
-          text += `- ${role.role}: ${Array.isArray(role.responsibilities) ? role.responsibilities.join(', ') : 'N/A'}\n`;
-          text += `  Timp alocat: ${role.time_allocation || 'N/A'}\n`;
-        });
-      }
     }
     
     return text;
@@ -257,75 +200,33 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     
     let text = `CALENDAR EDITORIAL: ${title}\n\n`;
     
-    if (details?.tactical_plan_per_platform && details.tactical_plan_per_platform.length > 0) {
+    if (details?.tactical_plan_per_platform) {
       details.tactical_plan_per_platform.forEach((platform: any) => {
         text += `PLATFORMA: ${platform.platform.toUpperCase()}\n`;
-        text += '='.repeat(50) + '\n\n';
+        text += '='.repeat(40) + '\n\n';
         
-        if (platform.editorial_calendar && platform.editorial_calendar.month_1) {
+        if (platform.editorial_calendar?.month_1) {
           platform.editorial_calendar.month_1.forEach((week: any) => {
             text += `SĂPTĂMÂNA ${week.week}\n`;
             text += '-'.repeat(20) + '\n';
             
             if (week.posts && week.posts.length > 0) {
               week.posts.forEach((post: any) => {
-                text += `${post.scheduled_date} | ${post.post_id}\n`;
-                if (post.copy) {
-                  text += `Titlu/Text: ${post.copy.main_text.substring(0, 100)}...\n`;
-                  text += `CTA: ${post.copy.call_to_action}\n`;
-                  text += `Hashtags: ${Array.isArray(post.copy.hashtags) ? post.copy.hashtags.join(' ') : ''}\n`;
-                }
-                if (post.visual_brief) {
-                  text += `Visual: ${post.visual_brief.type} (${post.visual_brief.dimensions})\n`;
-                }
-                text += `Buget: ${post.promotion_budget || 'N/A'}\n`;
-                text += '\n';
+                text += `ID: ${post.post_id}\n`;
+                text += `Data: ${post.scheduled_date}\n`;
+                text += `Conținut: ${post.copy?.main_text}\n`;
+                text += `CTA: ${post.copy?.call_to_action}\n`;
+                text += `Hashtags: ${post.copy?.hashtags?.join(' ')}\n`;
+                text += `Buget promovare: ${post.promotion_budget}\n\n`;
               });
-            } else {
-              text += 'Nu există postări planificate pentru această săptămână.\n\n';
             }
           });
         }
         text += '\n';
       });
-    } else {
-      text += 'Nu există un calendar editorial definit pentru acest plan.\n';
     }
     
     return text;
-  };
-
-  const generateExcelExport = () => {
-    let csv = 'Platforma,Săptămâna,Post ID,Data programată,Text principal,CTA,Hashtags,Tip vizual,Dimensiuni,Buget promovare,KPI principal\n';
-    
-    if (plan.details?.tactical_plan_per_platform) {
-      plan.details.tactical_plan_per_platform.forEach((platform: any) => {
-        if (platform.editorial_calendar && platform.editorial_calendar.month_1) {
-          platform.editorial_calendar.month_1.forEach((week: any) => {
-            if (week.posts) {
-              week.posts.forEach((post: any) => {
-                const row = [
-                  platform.platform,
-                  week.week,
-                  post.post_id || '',
-                  post.scheduled_date || '',
-                  `"${(post.copy?.main_text || '').replace(/"/g, '""')}"`,
-                  `"${(post.copy?.call_to_action || '').replace(/"/g, '""')}"`,
-                  `"${Array.isArray(post.copy?.hashtags) ? post.copy.hashtags.join(' ') : ''}"`,
-                  post.visual_brief?.type || '',
-                  post.visual_brief?.dimensions || '',
-                  post.promotion_budget || '',
-                  post.individual_metrics?.primary_kpi || ''
-                ].join(',');
-                csv += row + '\n';
-              });
-            }
-          });
-        }
-      });
-    }
-    
-    return csv;
   };
 
   const handleShare = () => {
@@ -342,7 +243,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Rezumat executiv</h3>
-            <p className="text-gray-600">Obiective și strategie generală</p>
+            <p className="text-gray-600">Obiective și strategie</p>
           </div>
         </div>
         
@@ -352,10 +253,10 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </p>
           
           {plan.details?.delivery_date && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-blue-900">Data livrare: {plan.details.delivery_date}</span>
+                <Calendar className="h-5 w-5 text-green-600" />
+                <span className="font-semibold text-green-900">Data livrare: {plan.details.delivery_date}</span>
               </div>
             </div>
           )}
@@ -399,127 +300,51 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
         </Card>
       )}
 
-      {/* Deliverables */}
-      {plan.details?.deliverables && (
-        <Card className="shadow-lg" animation="slideInRight" hover="subtle">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-xl">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">Livrabile incluse</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(plan.details.deliverables).map(([key, value], index) => (
-              <div key={index} className="flex items-start space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-900 capitalize">{key.replace(/_/g, ' ')}</p>
-                  <p className="text-sm text-gray-600">{value as string}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Platform Selection Justification */}
-      {plan.details?.platform_selection_justification && (
-        <Card className="shadow-lg" animation="fadeInUp" hover="subtle">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-indigo-100 rounded-xl">
-              <Zap className="h-6 w-6 text-indigo-600" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">Justificarea platformelor</h3>
-          </div>
-          
-          <div className="space-y-4">
-            {plan.details.platform_selection_justification.selected_platforms?.map((platform: any, index: number) => (
-              <Card 
-                key={index}
-                className={`border-l-4 border-indigo-400 bg-indigo-50`}
-                padding="sm"
-                hover="subtle"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    {getPlatformIcon(platform.platform)}
-                    <h4 className="font-semibold text-gray-900">{platform.platform}</h4>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    platform.priority_level === 'high' ? 'bg-red-100 text-red-800' :
-                    platform.priority_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {platform.priority_level}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700 mb-2">{platform.justification}</p>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <span className="font-semibold text-gray-800">Suprapunere audiență: </span>
-                    <span className="text-gray-600">{platform.audience_overlap}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-gray-800">ROI așteptat: </span>
-                    <span className="text-gray-600">{platform.expected_roi}</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-
-  const renderStrategy = () => (
-    <div className="space-y-6">
       {/* Identity and Voice */}
       {plan.details?.identity_and_voice && (
-        <Card className="shadow-lg" animation="slideInLeft">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Brain className="h-6 w-6 text-purple-600" />
+        <Card className="shadow-lg" animation="slideInLeft" hover="subtle">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-indigo-100 rounded-xl">
+              <Shield className="h-6 w-6 text-indigo-600" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Identitatea și vocea brandului</h3>
-              <p className="text-gray-600">Fundația strategiei de marketing</p>
-            </div>
+            <h3 className="text-lg font-bold text-gray-900">Identitatea și vocea brandului</h3>
           </div>
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Identitatea brandului:</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Identitatea brandului:</h4>
               <p className="text-gray-700">{plan.details.identity_and_voice.brand_identity}</p>
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Poziționarea pe piață:</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Poziționarea brandului:</h4>
               <p className="text-gray-700">{plan.details.identity_and_voice.brand_positioning}</p>
             </div>
             
             {plan.details.identity_and_voice.voice_characteristics && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Caracteristicile vocii:</h4>
-                  <p className="text-sm text-gray-700 mb-2">
-                    <span className="font-medium">Ton:</span> {plan.details.identity_and_voice.voice_characteristics.tone}
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Stil comunicare:</span> {plan.details.identity_and_voice.voice_characteristics.communication_style}
-                  </p>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Valorile brandului:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {plan.details.identity_and_voice.voice_characteristics.values?.map((value: string, index: number) => (
-                      <span key={index} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                        {value}
-                      </span>
-                    ))}
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Caracteristicile vocii:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Ton: </span>
+                    <span className="text-gray-600">{plan.details.identity_and_voice.voice_characteristics.tone}</span>
                   </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Stil comunicare: </span>
+                    <span className="text-gray-600">{plan.details.identity_and_voice.voice_characteristics.communication_style}</span>
+                  </div>
+                  {plan.details.identity_and_voice.voice_characteristics.values && (
+                    <div className="md:col-span-2">
+                      <span className="font-medium text-gray-700">Valori: </span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {plan.details.identity_and_voice.voice_characteristics.values.map((value: string, index: number) => (
+                          <span key={index} className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">
+                            {value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -527,62 +352,55 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
         </Card>
       )}
 
-      {/* KPIs SMART */}
-      {plan.details?.kpis_smart && (
-        <Card className="shadow-lg" animation="slideInRight">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Award className="h-6 w-6 text-green-600" />
+      {/* Buyer Personas */}
+      {plan.details?.buyer_personas && (
+        <Card className="shadow-lg" animation="slideInRight" hover="subtle">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-xl">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">KPI-uri SMART</h3>
-              <p className="text-gray-600">Obiective măsurabile pentru următoarele 90 zile</p>
-            </div>
+            <h3 className="text-lg font-bold text-gray-900">Buyer Personas</h3>
           </div>
           
-          <div className="space-y-4">
-            {plan.details.kpis_smart.map((kpi: any, index: number) => (
-              <Card 
-                key={index}
-                className="border-l-4 border-green-400 bg-green-50"
-                padding="md"
-                animation="scaleIn"
-                delay={index + 1}
-                hover="subtle"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="font-bold text-gray-900">{kpi.name}</h4>
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    {kpi.target_value}
-                  </span>
-                </div>
+          <div className="space-y-6">
+            {plan.details.buyer_personas.map((persona: any, index: number) => (
+              <Card key={index} className="bg-blue-50 border-blue-200" padding="md">
+                <h4 className="font-semibold text-gray-900 mb-3">{persona.name}</h4>
                 
-                <p className="text-gray-700 mb-4">{kpi.description}</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <span className="font-semibold text-gray-800">Măsurare: </span>
-                    <span className="text-gray-600">{kpi.measurement_method}</span>
+                    <h5 className="font-medium text-gray-800 mb-2">Demografia:</h5>
+                    <ul className="space-y-1 text-gray-600">
+                      <li>Vârstă: {persona.demographics?.age_range}</li>
+                      <li>Gen: {persona.demographics?.gender}</li>
+                      <li>Locație: {persona.demographics?.location}</li>
+                      <li>Venit: {persona.demographics?.income}</li>
+                      <li>Educație: {persona.demographics?.education}</li>
+                    </ul>
                   </div>
+                  
                   <div>
-                    <span className="font-semibold text-gray-800">Responsabil: </span>
-                    <span className="text-gray-600">{kpi.responsible}</span>
+                    <h5 className="font-medium text-gray-800 mb-2">Psihografia:</h5>
+                    <ul className="space-y-1 text-gray-600">
+                      <li>Stil de viață: {persona.psychographics?.lifestyle}</li>
+                      {persona.psychographics?.interests && (
+                        <li>Interese: {persona.psychographics.interests.slice(0, 3).join(', ')}</li>
+                      )}
+                      {persona.psychographics?.pain_points && (
+                        <li>Probleme: {persona.psychographics.pain_points.slice(0, 2).join(', ')}</li>
+                      )}
+                    </ul>
                   </div>
+                  
                   <div>
-                    <span className="font-semibold text-gray-800">Perioada: </span>
-                    <span className="text-gray-600">{kpi.timeframe}</span>
-                  </div>
-                </div>
-                
-                {/* SMART Breakdown */}
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <h5 className="font-semibold text-gray-900 mb-2">Analiza SMART:</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-                    <div><span className="font-medium">S:</span> {kpi.specific}</div>
-                    <div><span className="font-medium">M:</span> {kpi.measurable}</div>
-                    <div><span className="font-medium">A:</span> {kpi.achievable}</div>
-                    <div><span className="font-medium">R:</span> {kpi.relevant}</div>
-                    <div><span className="font-medium">T:</span> {kpi.time_bound}</div>
+                    <h5 className="font-medium text-gray-800 mb-2">Comportament digital:</h5>
+                    <ul className="space-y-1 text-gray-600">
+                      <li>Timp online: {persona.digital_behavior?.online_activity_time}</li>
+                      {persona.digital_behavior?.preferred_platforms && (
+                        <li>Platforme: {persona.digital_behavior.preferred_platforms.slice(0, 3).join(', ')}</li>
+                      )}
+                      <li>Comportament cumpărare: {persona.digital_behavior?.purchase_behavior}</li>
+                    </ul>
                   </div>
                 </div>
               </Card>
@@ -591,84 +409,119 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
         </Card>
       )}
 
-      {/* Buyer Personas */}
-      {plan.details?.buyer_personas && (
-        <Card className="shadow-lg" animation="fadeInUp">
+      {/* Platform Selection Justification */}
+      {plan.details?.platform_selection_justification && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="shadow-lg" animation="slideInLeft" hover="subtle">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-green-100 rounded-xl">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Platforme selectate</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {plan.details.platform_selection_justification.selected_platforms?.map((platform: any, index: number) => (
+                <Card key={index} className="bg-green-50 border-green-200" padding="sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-900">{platform.platform}</h4>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      platform.priority_level === 'high' ? 'bg-red-100 text-red-800' :
+                      platform.priority_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {platform.priority_level}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">{platform.justification}</p>
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">ROI așteptat: </span>{platform.expected_roi}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="shadow-lg" animation="slideInRight" hover="subtle">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-xl">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Platforme excluse</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {plan.details.platform_selection_justification.excluded_platforms?.map((platform: any, index: number) => (
+                <Card key={index} className="bg-red-50 border-red-200" padding="sm">
+                  <h4 className="font-semibold text-gray-900 mb-1">{platform.platform}</h4>
+                  <p className="text-sm text-gray-700">{platform.reason}</p>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderStrategy = () => (
+    <div className="space-y-6">
+      {/* KPIs SMART */}
+      {plan.details?.kpis_smart && (
+        <Card className="shadow-lg" animation="slideInLeft">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Users className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Award className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Buyer Personas</h3>
-              <p className="text-gray-600">Profiluri detaliate ale audiența țintă</p>
+              <h3 className="text-xl font-bold text-gray-900">KPI-uri SMART</h3>
+              <p className="text-gray-600">Indicatori cheie de performanță</p>
             </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {plan.details.buyer_personas.map((persona: any, index: number) => (
-              <Card 
-                key={index}
-                className="border-l-4 border-blue-400 bg-blue-50"
-                padding="md"
-                animation="slideInLeft"
-                delay={index + 1}
-                hover="subtle"
-              >
-                <h4 className="font-bold text-gray-900 mb-4">{persona.name}</h4>
+            {plan.details.kpis_smart.map((kpi: any, index: number) => (
+              <Card key={index} className="bg-green-50 border-green-200" padding="md" hover="subtle">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">{kpi.name}</h4>
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    {kpi.target_value}
+                  </span>
+                </div>
                 
-                {/* Demographics */}
-                {persona.demographics && (
-                  <div className="mb-4">
-                    <h5 className="font-semibold text-gray-800 mb-2">Demografia:</h5>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="font-medium">Vârstă:</span> {persona.demographics.age_range}</div>
-                      <div><span className="font-medium">Gen:</span> {persona.demographics.gender}</div>
-                      <div><span className="font-medium">Locație:</span> {persona.demographics.location}</div>
-                      <div><span className="font-medium">Venit:</span> {persona.demographics.income}</div>
-                      <div><span className="font-medium">Educație:</span> {persona.demographics.education}</div>
-                      <div><span className="font-medium">Ocupație:</span> {persona.demographics.occupation}</div>
+                <p className="text-gray-700 text-sm mb-4">{kpi.description}</p>
+                
+                <div className="space-y-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="font-medium text-gray-800">Măsurare: </span>
+                      <span className="text-gray-600">{kpi.measurement_method}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Perioada: </span>
+                      <span className="text-gray-600">{kpi.timeframe}</span>
                     </div>
                   </div>
-                )}
-                
-                {/* Psychographics */}
-                {persona.psychographics && (
-                  <div className="mb-4">
-                    <h5 className="font-semibold text-gray-800 mb-2">Psihografia:</h5>
-                    <div className="space-y-2 text-sm">
-                      {persona.psychographics.interests && (
-                        <div>
-                          <span className="font-medium">Interese: </span>
-                          <span>{persona.psychographics.interests.join(', ')}</span>
-                        </div>
-                      )}
-                      {persona.psychographics.pain_points && (
-                        <div>
-                          <span className="font-medium">Puncte de durere: </span>
-                          <span>{persona.psychographics.pain_points.join(', ')}</span>
-                        </div>
-                      )}
-                      {persona.psychographics.goals && (
-                        <div>
-                          <span className="font-medium">Obiective: </span>
-                          <span>{persona.psychographics.goals.join(', ')}</span>
-                        </div>
-                      )}
+                  
+                  {kpi.responsible && (
+                    <div>
+                      <span className="font-medium text-gray-800">Responsabil: </span>
+                      <span className="text-gray-600">{kpi.responsible}</span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
                 
-                {/* Digital Behavior */}
-                {persona.digital_behavior && (
-                  <div>
-                    <h5 className="font-semibold text-gray-800 mb-2">Comportament digital:</h5>
-                    <div className="space-y-1 text-sm">
-                      <div><span className="font-medium">Platforme preferate:</span> {persona.digital_behavior.preferred_platforms?.join(', ')}</div>
-                      <div><span className="font-medium">Timp online:</span> {persona.digital_behavior.online_activity_time}</div>
-                      <div><span className="font-medium">Preferințe conținut:</span> {persona.digital_behavior.content_preferences?.join(', ')}</div>
-                    </div>
+                {/* SMART Breakdown */}
+                <Card className="mt-4 bg-white border-green-100" padding="sm">
+                  <h5 className="font-medium text-gray-800 mb-2 text-xs">Analiza SMART:</h5>
+                  <div className="space-y-1 text-xs">
+                    <div><span className="font-medium">S</span>pecific: {kpi.specific}</div>
+                    <div><span className="font-medium">M</span>ăsurabil: {kpi.measurable}</div>
+                    <div><span className="font-medium">A</span>tinsibil: {kpi.achievable}</div>
+                    <div><span className="font-medium">R</span>elevant: {kpi.relevant}</div>
+                    <div><span className="font-medium">T</span>emporal: {kpi.time_bound}</div>
                   </div>
-                )}
+                </Card>
               </Card>
             ))}
           </div>
@@ -679,8 +532,8 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
       {plan.details?.budget_allocation_summary && (
         <Card className="shadow-lg" animation="slideInRight">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <DollarSign className="h-6 w-6 text-yellow-600" />
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <DollarSign className="h-6 w-6 text-purple-600" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">Alocarea bugetului</h3>
@@ -688,48 +541,47 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
             </div>
           </div>
           
-          <div className="space-y-6">
-            <div className="text-center">
-              <h4 className="text-2xl font-bold text-gray-900 mb-2">
-                Buget total: {plan.details.budget_allocation_summary.total_budget}
-              </h4>
-            </div>
-            
-            {/* Allocation by Channel */}
-            {plan.details.budget_allocation_summary.allocation_by_channel && (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Alocare pe canale:</h4>
-                <div className="space-y-3">
-                  {plan.details.budget_allocation_summary.allocation_by_channel.map((channel: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getPlatformIcon(channel.channel)}
-                        <span className="font-medium text-gray-900">{channel.channel}</span>
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* By Channel */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4">Alocare pe canale</h4>
+              <div className="space-y-3">
+                {plan.details.budget_allocation_summary.allocation_by_channel?.map((channel: any, index: number) => (
+                  <Card key={index} className="bg-purple-50 border-purple-200" padding="sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900">{channel.channel}</span>
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">{channel.percentage}</div>
+                        <div className="font-semibold text-purple-700">{channel.percentage}</div>
                         <div className="text-sm text-gray-600">{channel.amount}</div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-xs text-gray-600">{channel.justification}</p>
+                  </Card>
+                ))}
               </div>
-            )}
+            </div>
             
-            {/* Allocation by Type */}
-            {plan.details.budget_allocation_summary.allocation_by_type && (
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Alocare pe tipuri:</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(plan.details.budget_allocation_summary.allocation_by_type).map(([type, percentage], index) => (
-                    <div key={index} className="text-center p-3 bg-yellow-50 rounded-lg">
-                      <div className="font-bold text-gray-900">{percentage as string}</div>
-                      <div className="text-sm text-gray-600 capitalize">{type.replace(/_/g, ' ')}</div>
-                    </div>
-                  ))}
-                </div>
+            {/* By Type */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4">Alocare pe tipuri</h4>
+              <div className="space-y-3">
+                {plan.details.budget_allocation_summary.allocation_by_type && Object.entries(plan.details.budget_allocation_summary.allocation_by_type).map(([type, percentage]: [string, any], index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <span className="font-medium text-gray-900 capitalize">{type.replace(/_/g, ' ')}</span>
+                    <span className="font-semibold text-purple-700">{percentage}</span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          </div>
+          
+          <div className="mt-6 p-4 bg-purple-100 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-purple-600" />
+              <span className="font-semibold text-purple-900">
+                Buget total: {plan.details.budget_allocation_summary.total_budget}
+              </span>
+            </div>
           </div>
         </Card>
       )}
@@ -739,29 +591,14 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   const renderCalendar = () => (
     <div className="space-y-6">
       <Card className="shadow-lg" animation="slideInLeft">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Calendar className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Calendar editorial</h3>
-              <p className="text-gray-600">Planificarea detaliată a conținutului</p>
-            </div>
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-3 bg-green-100 rounded-xl">
+            <Calendar className="h-6 w-6 text-green-600" />
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              setExportFormat('calendar');
-              handleExport();
-            }}
-            className="flex items-center space-x-2"
-          >
-            <Download className="h-4 w-4" />
-            <span>Export calendar</span>
-          </Button>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">Calendar editorial</h3>
+            <p className="text-gray-600">Planificarea detaliată a conținutului</p>
+          </div>
         </div>
 
         {plan.details?.tactical_plan_per_platform ? (
@@ -794,16 +631,12 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      const platformContent = platform.editorial_calendar?.month_1?.map((week: any) => 
-                        week.posts?.map((post: any) => 
-                          `${post.scheduled_date}: ${post.copy?.main_text || ''}`
-                        ).join('\n')
-                      ).join('\n\n');
-                      copyToClipboard(platformContent || '', `platform-${platformIndex}`);
+                      const platformContent = `Calendar ${platform.platform}:\n${JSON.stringify(platform.editorial_calendar, null, 2)}`;
+                      copyToClipboard(platformContent, `platform-calendar-${platformIndex}`);
                     }}
                     className="flex items-center space-x-1"
                   >
-                    {copiedContentId === `platform-${platformIndex}` ? (
+                    {copiedContentId === `platform-calendar-${platformIndex}` ? (
                       <>
                         <CheckSquare className="h-3 w-3" />
                         <span>Copiat!</span>
@@ -811,126 +644,147 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     ) : (
                       <>
                         <Copy className="h-3 w-3" />
-                        <span>Copiază</span>
+                        <span>Copiază calendarul</span>
                       </>
                     )}
                   </Button>
                 </div>
                 
+                {/* Platform Strategy Summary */}
+                <Card className="bg-gray-50 mb-6" padding="sm">
+                  <h5 className="font-medium text-gray-800 mb-2">Strategia platformei:</h5>
+                  <p className="text-sm text-gray-700 mb-3">{platform.strategy}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="font-medium text-gray-800">Tipuri conținut: </span>
+                      <span className="text-gray-600">{platform.content_types?.join(', ')}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Frecvență: </span>
+                      <span className="text-gray-600">{platform.posting_frequency}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Ore optime: </span>
+                      <span className="text-gray-600">{platform.optimal_posting_times?.join(', ')}</span>
+                    </div>
+                  </div>
+                </Card>
+                
                 {/* Editorial Calendar */}
                 {platform.editorial_calendar?.month_1 && (
                   <div className="space-y-6">
+                    <h5 className="font-semibold text-gray-900">Luna 1 - Calendar editorial</h5>
                     {platform.editorial_calendar.month_1.map((week: any, weekIndex: number) => (
-                      <Card 
-                        key={weekIndex}
-                        className="bg-gray-50"
-                        padding="md"
-                        animation="scaleIn"
-                        delay={weekIndex + 1}
-                      >
-                        <h5 className="font-bold text-gray-900 mb-4">Săptămâna {week.week}</h5>
+                      <Card key={weekIndex} className="bg-blue-50 border-blue-200" padding="md">
+                        <h6 className="font-semibold text-gray-900 mb-4">Săptămâna {week.week}</h6>
                         
                         {week.posts && week.posts.length > 0 ? (
-                          <div className="space-y-4">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {week.posts.map((post: any, postIndex: number) => (
-                              <Card 
-                                key={postIndex}
-                                className="bg-white border-l-4 border-blue-400"
-                                padding="sm"
-                                hover="subtle"
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <div>
-                                    <h6 className="font-semibold text-gray-900">{post.post_id}</h6>
-                                    <p className="text-sm text-gray-600">{post.scheduled_date}</p>
+                              <Card key={postIndex} className="bg-white border-blue-100" padding="sm" hover="subtle">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="font-medium text-blue-900">#{post.post_id}</span>
+                                  <div className="flex space-x-1">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => copyToClipboard(post.copy?.main_text || '', `post-${platformIndex}-${weekIndex}-${postIndex}`)}
+                                      className="p-1 h-6 w-6"
+                                    >
+                                      {copiedContentId === `post-${platformIndex}-${weekIndex}-${postIndex}` ? (
+                                        <CheckSquare className="h-3 w-3 text-green-600" />
+                                      ) : (
+                                        <Copy className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => setExpandedPost(expandedPost === `${platformIndex}-${weekIndex}-${postIndex}` ? null : `${platformIndex}-${weekIndex}-${postIndex}`)}
+                                      className="p-1 h-6 w-6"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
                                   </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => copyToClipboard(post.copy?.main_text || '', `post-${platformIndex}-${weekIndex}-${postIndex}`)}
-                                    className="p-1"
-                                  >
-                                    {copiedContentId === `post-${platformIndex}-${weekIndex}-${postIndex}` ? (
-                                      <CheckSquare className="h-3 w-3 text-green-600" />
-                                    ) : (
-                                      <Copy className="h-3 w-3" />
-                                    )}
-                                  </Button>
                                 </div>
                                 
-                                {/* Post Content */}
-                                {post.copy && (
-                                  <div className="space-y-3">
-                                    <div>
-                                      <h6 className="font-medium text-gray-800 mb-1">Conținut:</h6>
-                                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
-                                        {post.copy.main_text}
-                                      </p>
+                                <div className="space-y-2">
+                                  <div>
+                                    <span className="text-xs font-medium text-gray-700">Data: </span>
+                                    <span className="text-xs text-gray-600">{post.scheduled_date}</span>
+                                  </div>
+                                  
+                                  <div className="bg-gray-50 p-2 rounded text-xs">
+                                    <div className="font-medium text-gray-800 mb-1">Conținut:</div>
+                                    <div className="text-gray-700 line-clamp-3">{post.copy?.main_text}</div>
+                                  </div>
+                                  
+                                  {post.copy?.hashtags && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {post.copy.hashtags.slice(0, 3).map((hashtag: string, hashIndex: number) => (
+                                        <span key={hashIndex} className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                                          {hashtag}
+                                        </span>
+                                      ))}
+                                      {post.copy.hashtags.length > 3 && (
+                                        <span className="px-1 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                                          +{post.copy.hashtags.length - 3}
+                                        </span>
+                                      )}
                                     </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                      <div>
-                                        <h6 className="font-medium text-gray-800 mb-1">Call-to-Action:</h6>
-                                        <p className="text-sm text-gray-700">{post.copy.call_to_action}</p>
-                                      </div>
-                                      
-                                      {post.copy.hashtags && (
+                                  )}
+                                  
+                                  {post.promotion_budget && (
+                                    <div className="text-xs">
+                                      <span className="font-medium text-gray-700">Buget promovare: </span>
+                                      <span className="text-green-600 font-medium">{post.promotion_budget}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Expanded Post Details */}
+                                {expandedPost === `${platformIndex}-${weekIndex}-${postIndex}` && (
+                                  <Card className="mt-3 bg-gray-50" padding="sm">
+                                    <div className="space-y-3 text-xs">
+                                      {post.copy?.call_to_action && (
                                         <div>
-                                          <h6 className="font-medium text-gray-800 mb-1">Hashtags:</h6>
-                                          <div className="flex flex-wrap gap-1">
-                                            {post.copy.hashtags.map((hashtag: string, hashIndex: number) => (
-                                              <span 
-                                                key={hashIndex}
-                                                className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
-                                              >
-                                                {hashtag}
-                                              </span>
-                                            ))}
+                                          <span className="font-medium text-gray-800">CTA: </span>
+                                          <span className="text-gray-700">{post.copy.call_to_action}</span>
+                                        </div>
+                                      )}
+                                      
+                                      {post.visual_brief && (
+                                        <div>
+                                          <span className="font-medium text-gray-800">Brief vizual: </span>
+                                          <div className="mt-1 space-y-1">
+                                            <div>Tip: {post.visual_brief.type}</div>
+                                            <div>Dimensiuni: {post.visual_brief.dimensions}</div>
+                                            <div>Stil: {post.visual_brief.style_guidelines}</div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {post.target_audience_specific && (
+                                        <div>
+                                          <span className="font-medium text-gray-800">Audiența țintă: </span>
+                                          <span className="text-gray-700">{post.target_audience_specific.demographics}</span>
+                                        </div>
+                                      )}
+                                      
+                                      {post.individual_metrics && (
+                                        <div>
+                                          <span className="font-medium text-gray-800">Metrici țintă: </span>
+                                          <div className="mt-1 grid grid-cols-2 gap-1">
+                                            <div>Reach: {post.individual_metrics.target_reach}</div>
+                                            <div>Engagement: {post.individual_metrics.target_engagement}</div>
+                                            <div>Click-uri: {post.individual_metrics.target_clicks}</div>
+                                            <div>Conversii: {post.individual_metrics.target_conversions}</div>
                                           </div>
                                         </div>
                                       )}
                                     </div>
-                                  </div>
+                                  </Card>
                                 )}
-                                
-                                {/* Visual Brief */}
-                                {post.visual_brief && (
-                                  <div className="mt-3 pt-3 border-t border-gray-200">
-                                    <h6 className="font-medium text-gray-800 mb-2">Brief vizual:</h6>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                      <div><span className="font-medium">Tip:</span> {post.visual_brief.type}</div>
-                                      <div><span className="font-medium">Dimensiuni:</span> {post.visual_brief.dimensions}</div>
-                                      <div><span className="font-medium">Stil:</span> {post.visual_brief.style_guidelines}</div>
-                                      <div><span className="font-medium">Buget:</span> {post.promotion_budget}</div>
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {/* Metrics and Targeting */}
-                                <div className="mt-3 pt-3 border-t border-gray-200">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                    {post.individual_metrics && (
-                                      <div>
-                                        <h6 className="font-medium text-gray-800 mb-1">Metrici țintă:</h6>
-                                        <div className="space-y-1">
-                                          <div>KPI principal: {post.individual_metrics.primary_kpi}</div>
-                                          <div>Reach țintă: {post.individual_metrics.target_reach}</div>
-                                          <div>Engagement țintă: {post.individual_metrics.target_engagement}</div>
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    {post.target_audience_specific && (
-                                      <div>
-                                        <h6 className="font-medium text-gray-800 mb-1">Targetare:</h6>
-                                        <div className="space-y-1">
-                                          <div>Demografia: {post.target_audience_specific.demographics}</div>
-                                          <div>Interese: {post.target_audience_specific.interests?.join(', ')}</div>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
                               </Card>
                             ))}
                           </div>
@@ -957,6 +811,23 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
             </p>
           </Card>
         )}
+
+        {/* Export Calendar Button */}
+        {plan.details?.tactical_plan_per_platform && (
+          <div className="mt-6 flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setExportFormat('calendar');
+                handleExport();
+              }}
+              className="flex items-center space-x-2"
+            >
+              <Download className="h-4 w-4" />
+              <span>Exportă calendarul</span>
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
@@ -970,7 +841,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Conținut detaliat</h3>
-            <p className="text-gray-600">Specificații complete pentru fiecare tip de conținut</p>
+            <p className="text-gray-600">Postări și materiale create cu AI</p>
           </div>
         </div>
 
@@ -989,14 +860,14 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                 animation="fadeInUp"
                 delay={platformIndex + 1}
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-lg ${getPlatformColor(platform.platform)}`}>
                       {getPlatformIcon(platform.platform)}
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">{platform.platform}</h4>
-                      <p className="text-sm text-gray-600">{platform.strategy}</p>
+                      <p className="text-xs text-gray-600">{platform.posting_frequency || 'Frecvență variabilă'}</p>
                     </div>
                   </div>
                   
@@ -1004,12 +875,12 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      const platformStrategy = `Strategie ${platform.platform}:\n${platform.strategy}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}\nOrele optime: ${platform.optimal_posting_times?.join(', ') || 'N/A'}`;
-                      copyToClipboard(platformStrategy, `strategy-${platformIndex}`);
+                      const platformContent = `Strategie ${platform.platform}:\n${platform.strategy}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}`;
+                      copyToClipboard(platformContent, `platform-${platformIndex}`);
                     }}
                     className="flex items-center space-x-1"
                   >
-                    {copiedContentId === `strategy-${platformIndex}` ? (
+                    {copiedContentId === `platform-${platformIndex}` ? (
                       <>
                         <CheckSquare className="h-3 w-3" />
                         <span>Copiat!</span>
@@ -1023,44 +894,18 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                   </Button>
                 </div>
                 
-                {/* Platform Strategy Details */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h5 className="font-medium text-gray-800 mb-2">Tipuri de conținut:</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {platform.content_types?.map((type: string, index: number) => (
-                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                          {type}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h5 className="font-medium text-gray-800 mb-2">Frecvența postărilor:</h5>
-                    <p className="text-sm text-gray-700">{platform.posting_frequency}</p>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h5 className="font-medium text-gray-800 mb-2">Orele optime:</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {platform.optimal_posting_times?.map((time: string, index: number) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                          {time}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-100 mb-4">
+                  <h5 className="font-medium text-gray-800 mb-2">Strategie:</h5>
+                  <p className="text-gray-700 text-sm">{platform.strategy}</p>
                 </div>
                 
-                {/* Content Examples */}
                 {platform.editorial_calendar?.month_1 && (
-                  <div>
-                    <h5 className="font-medium text-gray-800 mb-4">Exemple de conținut:</h5>
+                  <div className="space-y-4">
+                    <h5 className="font-medium text-gray-800">Exemple de conținut generat:</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {platform.editorial_calendar.month_1
                         .flatMap((week: any) => week.posts || [])
-                        .slice(0, 4)
+                        .slice(0, 6)
                         .map((post: any, contentIndex: number) => (
                           <Card 
                             key={contentIndex}
@@ -1069,14 +914,14 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                             hover="subtle"
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-medium text-gray-700">{post.visual_brief?.type || 'Post'}</span>
+                              <span className="text-xs font-medium text-gray-700">#{post.post_id}</span>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => copyToClipboard(post.copy?.main_text || '', `content-${platformIndex}-${contentIndex}`)}
+                                onClick={() => copyToClipboard(post.copy?.main_text || '', `platform-content-${platformIndex}-${contentIndex}`)}
                                 className="p-1 h-6 w-6"
                               >
-                                {copiedContentId === `content-${platformIndex}-${contentIndex}` ? (
+                                {copiedContentId === `platform-content-${platformIndex}-${contentIndex}` ? (
                                   <CheckSquare className="h-3 w-3 text-green-600" />
                                 ) : (
                                   <Copy className="h-3 w-3" />
@@ -1084,22 +929,37 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                               </Button>
                             </div>
                             
-                            <h6 className="font-medium text-gray-800 text-sm mb-2">{post.post_id}</h6>
-                            <p className="text-xs text-gray-600 line-clamp-3 mb-2">
-                              {post.copy?.main_text || 'Conținut indisponibil'}
-                            </p>
-                            
-                            {post.copy?.call_to_action && (
-                              <div className="text-xs text-blue-600 font-medium">
-                                CTA: {post.copy.call_to_action}
+                            <div className="space-y-2">
+                              <div className="text-xs text-gray-600">{post.scheduled_date}</div>
+                              <div className="bg-white p-2 rounded border text-xs">
+                                <div className="font-medium text-gray-800 mb-1">Conținut:</div>
+                                <div className="text-gray-700 line-clamp-4">{post.copy?.main_text}</div>
                               </div>
-                            )}
-                            
-                            {post.visual_brief && (
-                              <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500">
-                                {post.visual_brief.type} • {post.visual_brief.dimensions}
-                              </div>
-                            )}
+                              
+                              {post.copy?.call_to_action && (
+                                <div className="text-xs">
+                                  <span className="font-medium text-gray-700">CTA: </span>
+                                  <span className="text-gray-600">{post.copy.call_to_action}</span>
+                                </div>
+                              )}
+                              
+                              {post.copy?.hashtags && (
+                                <div className="flex flex-wrap gap-1">
+                                  {post.copy.hashtags.slice(0, 3).map((hashtag: string, hashIndex: number) => (
+                                    <span key={hashIndex} className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                                      {hashtag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {post.visual_brief && (
+                                <div className="text-xs">
+                                  <span className="font-medium text-gray-700">Visual: </span>
+                                  <span className="text-gray-600">{post.visual_brief.type} ({post.visual_brief.dimensions})</span>
+                                </div>
+                              )}
+                            </div>
                           </Card>
                         ))
                       }
@@ -1115,11 +975,15 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
               <Zap className="h-8 w-8 text-purple-600" />
             </div>
             <h4 className="text-lg font-semibold text-gray-900 mb-2">
-              Conținut în dezvoltare
+              Generator de conținut
             </h4>
             <p className="text-gray-600 mb-4">
-              Conținutul detaliat va fi disponibil în curând
+              Funcționalitatea de generare automată a conținutului va fi disponibilă în curând
             </p>
+            <Button className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span>Generează conținut</span>
+            </Button>
           </Card>
         )}
       </Card>
@@ -1135,156 +999,116 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Metrici și ROI</h3>
-            <p className="text-gray-600">Urmărirea performanței și returnului investiției</p>
+            <p className="text-gray-600">Urmărirea performanței campaniei</p>
           </div>
         </div>
 
-        {/* Weekly Dashboard Metrics */}
-        {plan.details?.monitoring_and_optimization?.weekly_dashboard_metrics && (
-          <div className="mb-8">
-            <h4 className="font-semibold text-gray-900 mb-4">Metrici dashboard săptămânal:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {plan.details.monitoring_and_optimization.weekly_dashboard_metrics.map((metric: any, index: number) => (
-                <Card 
-                  key={index}
-                  className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200"
-                  padding="md"
-                  animation="scaleIn"
-                  delay={index + 1}
-                  hover="subtle"
-                >
-                  <div className="text-center">
-                    <h5 className="font-semibold text-gray-900 mb-2">{metric.metric}</h5>
-                    <div className="text-2xl font-bold text-orange-600 mb-2">
-                      {metric.target_value}
-                    </div>
-                    <p className="text-gray-600 text-sm mb-2">{metric.description}</p>
-                    <div className="text-xs text-gray-500">
-                      <div>Frecvență: {metric.measurement_frequency}</div>
-                      <div>Sursă: {metric.data_source}</div>
-                    </div>
+        {plan.details?.kpis_smart ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {plan.details.kpis_smart.map((kpi: any, index: number) => (
+              <Card 
+                key={index}
+                className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200"
+                padding="md"
+                animation="scaleIn"
+                delay={index + 1}
+                hover="subtle"
+              >
+                <div className="text-center">
+                  <h4 className="font-semibold text-gray-900 mb-2">{kpi.name}</h4>
+                  <div className="text-2xl font-bold text-orange-600 mb-2">
+                    {kpi.target_value}
                   </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Performance Evaluation Schedule */}
-        {plan.details?.monitoring_and_optimization?.performance_evaluation_schedule && (
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" animation="slideInRight">
-            <h4 className="font-semibold text-gray-900 mb-4">Programul de evaluare a performanței:</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {Object.entries(plan.details.monitoring_and_optimization.performance_evaluation_schedule).map(([period, data]: [string, any], index) => (
-                <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
-                  <h5 className="font-semibold text-blue-900 mb-3 capitalize">
-                    {period.replace(/_/g, ' ')}
-                  </h5>
+                  <p className="text-gray-600 text-sm">{kpi.measurement_method}</p>
                   
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-800">Zone de focus:</span>
-                      <ul className="mt-1 space-y-1">
-                        {data.focus_areas?.map((area: string, areaIndex: number) => (
-                          <li key={areaIndex} className="text-gray-600 flex items-start space-x-1">
-                            <span className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                            <span>{area}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium text-gray-800">Metrici cheie:</span>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {data.key_metrics?.map((metric: string, metricIndex: number) => (
-                          <span key={metricIndex} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                            {metric}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium text-gray-800">Acțiuni:</span>
-                      <ul className="mt-1 space-y-1">
-                        {data.action_items?.map((action: string, actionIndex: number) => (
-                          <li key={actionIndex} className="text-gray-600 flex items-start space-x-1">
-                            <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>{action}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* Visual indicator */}
+                  <div className="mt-4 pt-4 border-t border-orange-200">
+                    <div className="flex items-center justify-center space-x-2">
+                      {index % 3 === 0 ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-xs text-green-600">În creștere</span>
+                        </>
+                      ) : index % 3 === 1 ? (
+                        <>
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <span className="text-xs text-amber-600">Necesită atenție</span>
+                        </>
+                      ) : (
+                        <>
+                          <Info className="h-4 w-4 text-blue-600" />
+                          <span className="text-xs text-blue-600">Monitorizare</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="text-center py-8" animation="bounceIn">
+            <div className="p-4 bg-orange-100 rounded-2xl mb-4 inline-block">
+              <BarChart3 className="h-8 w-8 text-orange-600" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">
+              Analytics în dezvoltare
+            </h4>
+            <p className="text-gray-600">
+              Urmărirea detaliată a performanței va fi disponibilă în curând
+            </p>
+          </Card>
+        )}
+
+        {/* ROI Projections */}
+        {plan.details?.budget_allocation_summary && (
+          <Card className="mt-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200" animation="fadeInUp">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <PieChart className="h-5 w-5 text-green-600" />
+              </div>
+              <h4 className="font-semibold text-gray-900">Proiecții ROI</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="text-center p-3 bg-white rounded-lg">
+                <div className="text-2xl font-bold text-green-600">150-200%</div>
+                <div className="text-gray-600">ROI așteptat</div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{plan.details.budget_allocation_summary.total_budget}</div>
+                <div className="text-gray-600">Investiție totală</div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">90 zile</div>
+                <div className="text-gray-600">Perioada evaluare</div>
+              </div>
             </div>
           </Card>
         )}
 
-        {/* Platform-specific KPIs */}
-        {plan.details?.tactical_plan_per_platform && (
-          <div className="mt-8">
-            <h4 className="font-semibold text-gray-900 mb-4">KPI-uri pe platforme:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {plan.details.tactical_plan_per_platform.map((platform: any, index: number) => (
-                <Card 
-                  key={index}
-                  className={`border-l-4 ${getPlatformColor(platform.platform).includes('blue') ? 'border-blue-400' : 
-                    getPlatformColor(platform.platform).includes('pink') ? 'border-pink-400' :
-                    'border-gray-400'
-                  }`}
-                  padding="md"
-                  animation="fadeInUp"
-                  delay={index + 1}
-                  hover="subtle"
-                >
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className={`p-2 rounded-lg ${getPlatformColor(platform.platform)}`}>
-                      {getPlatformIcon(platform.platform)}
-                    </div>
-                    <h5 className="font-semibold text-gray-900">{platform.platform}</h5>
-                  </div>
-                  
-                  {platform.kpis && (
-                    <div className="space-y-2">
-                      {platform.kpis.map((kpi: string, kpiIndex: number) => (
-                        <div key={kpiIndex} className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm text-gray-700">{kpi}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              ))}
+        {/* KPI Recommendations */}
+        <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" animation="fadeInUp">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Lightbulb className="h-5 w-5 text-blue-600" />
             </div>
-          </div>
-        )}
-
-        {/* ROI Projections */}
-        <Card className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200" animation="fadeInUp">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <PieChart className="h-6 w-6 text-green-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Proiecții ROI</h4>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-green-600 mb-1">150-200%</div>
-              <div className="text-sm text-gray-600">ROI așteptat</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-green-600 mb-1">30-45 zile</div>
-              <div className="text-sm text-gray-600">Perioada de recuperare</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-green-600 mb-1">25-40%</div>
-              <div className="text-sm text-gray-600">Creștere conversii</div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Recomandări pentru măsurare</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Setează obiective SMART (Specifice, Măsurabile, Realizabile, Relevante, Încadrate în Timp)</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Monitorizează atât metrici de vanitate (reach, likes) cât și metrici de conversie</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                  <span className="text-gray-700">Evaluează performanța la fiecare 2 săptămâni și ajustează strategia dacă e necesar</span>
+                </li>
+              </ul>
             </div>
           </div>
         </Card>
@@ -1294,45 +1118,137 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
 
   const renderMonitoring = () => (
     <div className="space-y-6">
-      <Card className="shadow-lg" animation="slideInLeft">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 bg-indigo-100 rounded-xl">
-            <Settings className="h-6 w-6 text-indigo-600" />
+      {/* Weekly Dashboard Metrics */}
+      {plan.details?.monitoring_and_optimization?.weekly_dashboard_metrics && (
+        <Card className="shadow-lg" animation="slideInLeft">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-3 bg-indigo-100 rounded-xl">
+              <Activity className="h-6 w-6 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Dashboard săptămânal</h3>
+              <p className="text-gray-600">Metrici de monitorizare continuă</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Monitorizare și optimizare</h3>
-            <p className="text-gray-600">Protocoale de urmărire și îmbunătățire continuă</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {plan.details.monitoring_and_optimization.weekly_dashboard_metrics.map((metric: any, index: number) => (
+              <Card key={index} className="bg-indigo-50 border-indigo-200" padding="md" hover="subtle">
+                <h4 className="font-semibold text-gray-900 mb-2">{metric.metric}</h4>
+                <p className="text-sm text-gray-700 mb-3">{metric.description}</p>
+                
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Țintă:</span>
+                    <span className="font-medium text-indigo-700">{metric.target_value}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Frecvență:</span>
+                    <span className="text-gray-700">{metric.measurement_frequency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Sursă:</span>
+                    <span className="text-gray-700">{metric.data_source}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        </div>
+        </Card>
+      )}
 
-        {/* Adjustment Recommendations */}
-        {plan.details?.monitoring_and_optimization?.adjustment_recommendations && (
-          <div className="mb-8">
-            <h4 className="font-semibold text-gray-900 mb-4">Recomandări de ajustare:</h4>
-            <div className="space-y-4">
-              {plan.details.monitoring_and_optimization.adjustment_recommendations.map((recommendation: any, index: number) => (
-                <Card 
-                  key={index}
-                  className="border-l-4 border-amber-400 bg-amber-50"
-                  padding="md"
-                  animation="slideInLeft"
-                  delay={index + 1}
-                  hover="subtle"
-                >
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="font-semibold text-gray-900 mb-1">Condiția declanșatoare:</h5>
-                      <p className="text-sm text-gray-700">{recommendation.trigger_condition}</p>
-                    </div>
-                    
-                    <div>
-                      <h5 className="font-semibold text-gray-900 mb-1">Acțiunea recomandată:</h5>
-                      <p className="text-sm text-gray-700">{recommendation.recommended_action}</p>
-                    </div>
+      {/* Performance Evaluation Schedule */}
+      {plan.details?.monitoring_and_optimization?.performance_evaluation_schedule && (
+        <Card className="shadow-lg" animation="slideInRight">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Clock className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Programul de evaluare</h3>
+              <p className="text-gray-600">Revizuiri periodice ale performanței</p>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            {Object.entries(plan.details.monitoring_and_optimization.performance_evaluation_schedule).map(([period, schedule]: [string, any], index: number) => (
+              <Card key={index} className="bg-green-50 border-green-200" padding="md">
+                <h4 className="font-semibold text-gray-900 mb-3 capitalize">
+                  {period.replace(/_/g, ' ')} Review
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <h5 className="font-medium text-gray-800 mb-2">Zone de focus:</h5>
+                    <ul className="space-y-1">
+                      {schedule.focus_areas?.map((area: string, areaIndex: number) => (
+                        <li key={areaIndex} className="text-gray-700 flex items-start space-x-1">
+                          <span className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-gray-800 mb-2">Metrici cheie:</h5>
+                    <ul className="space-y-1">
+                      {schedule.key_metrics?.map((metric: string, metricIndex: number) => (
+                        <li key={metricIndex} className="text-gray-700 flex items-start space-x-1">
+                          <span className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                          <span>{metric}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-gray-800 mb-2">Acțiuni:</h5>
+                    <ul className="space-y-1">
+                      {schedule.action_items?.map((action: string, actionIndex: number) => (
+                        <li key={actionIndex} className="text-gray-700 flex items-start space-x-1">
+                          <span className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Adjustment Recommendations */}
+      {plan.details?.monitoring_and_optimization?.adjustment_recommendations && (
+        <Card className="shadow-lg" animation="fadeInUp">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-3 bg-amber-100 rounded-xl">
+              <Settings className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Recomandări de ajustare</h3>
+              <p className="text-gray-600">Protocoale de optimizare automată</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {plan.details.monitoring_and_optimization.adjustment_recommendations.map((recommendation: any, index: number) => (
+              <Card key={index} className="bg-amber-50 border-amber-200" padding="md" hover="subtle">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Condiție: {recommendation.trigger_condition}
+                    </h4>
+                    <p className="text-gray-700 mb-3">{recommendation.recommended_action}</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="font-medium text-gray-800">Cronologie implementare: </span>
+                        <span className="font-medium text-gray-800">Timeline implementare: </span>
                         <span className="text-gray-600">{recommendation.implementation_timeline}</span>
                       </div>
                       <div>
@@ -1341,128 +1257,60 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                       </div>
                     </div>
                   </div>
-                </Card>
-              ))}
-            </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        )}
+        </Card>
+      )}
 
-        {/* Dedicated Responsibilities */}
-        {plan.details?.monitoring_and_optimization?.dedicated_responsibilities && (
-          <div className="mb-8">
-            <h4 className="font-semibold text-gray-900 mb-4">Responsabilități dedicate:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {plan.details.monitoring_and_optimization.dedicated_responsibilities.map((role: any, index: number) => (
-                <Card 
-                  key={index}
-                  className="border-l-4 border-indigo-400 bg-indigo-50"
-                  padding="md"
-                  animation="scaleIn"
-                  delay={index + 1}
-                  hover="subtle"
-                >
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                      <Briefcase className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <h5 className="font-semibold text-gray-900">{role.role}</h5>
-                  </div>
-                  
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-800">Responsabilități:</span>
-                      <ul className="mt-1 space-y-1">
-                        {role.responsibilities?.map((responsibility: string, respIndex: number) => (
-                          <li key={respIndex} className="text-gray-600 flex items-start space-x-1">
-                            <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>{responsibility}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <span className="font-medium text-gray-800">Timp alocat: </span>
-                        <span className="text-gray-600">{role.time_allocation}</span>
-                      </div>
-                      
-                      {role.required_skills && (
-                        <div>
-                          <span className="font-medium text-gray-800">Abilități necesare: </span>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {role.required_skills.map((skill: string, skillIndex: number) => (
-                              <span key={skillIndex} className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
+      {/* Dedicated Responsibilities */}
+      {plan.details?.monitoring_and_optimization?.dedicated_responsibilities && (
+        <Card className="shadow-lg" animation="fadeInUp">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <Users className="h-6 w-6 text-purple-600" />
             </div>
-          </div>
-        )}
-
-        {/* Response Protocols */}
-        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200" animation="fadeInUp">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Shield className="h-6 w-6 text-green-600" />
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Responsabilități dedicate</h3>
+              <p className="text-gray-600">Roluri și responsabilități în echipă</p>
             </div>
-            <h4 className="font-semibold text-gray-900">Protocoale de răspuns</h4>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h5 className="font-medium text-gray-800 mb-3">Timpul de răspuns standard:</h5>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Comentarii:</span>
-                  <span className="font-medium">2 ore</span>
+            {plan.details.monitoring_and_optimization.dedicated_responsibilities.map((role: any, index: number) => (
+              <Card key={index} className="bg-purple-50 border-purple-200" padding="md" hover="subtle">
+                <h4 className="font-semibold text-gray-900 mb-3">{role.role}</h4>
+                
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <h5 className="font-medium text-gray-800 mb-1">Responsabilități:</h5>
+                    <ul className="space-y-1">
+                      {role.responsibilities?.map((responsibility: string, respIndex: number) => (
+                        <li key={respIndex} className="text-gray-700 flex items-start space-x-1">
+                          <span className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></span>
+                          <span>{responsibility}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="font-medium text-gray-800">Timp alocat: </span>
+                      <span className="text-gray-600">{role.time_allocation}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Abilități: </span>
+                      <span className="text-gray-600">{role.required_skills?.slice(0, 2).join(', ')}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Mesaje private:</span>
-                  <span className="font-medium">1 oră</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Reclamații:</span>
-                  <span className="font-medium">30 minute</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Escaladare:</span>
-                  <span className="font-medium">24 ore</span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h5 className="font-medium text-gray-800 mb-3">Ghiduri de ton:</h5>
-              <ul className="space-y-1 text-sm">
-                <li className="flex items-start space-x-2">
-                  <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Păstrează tonul vocii brandului în toate răspunsurile</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Răspunde empatic și constructiv la feedback negativ</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Oferă soluții concrete și pași următori</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Escaladează situațiile complexe către management</span>
-                </li>
-              </ul>
-            </div>
+              </Card>
+            ))}
           </div>
         </Card>
-      </Card>
+      )}
     </div>
   );
 
@@ -1482,9 +1330,17 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{plan.title}</h1>
-              <p className="text-gray-600">
-                Creat pe {new Date(plan.created_at).toLocaleDateString('ro-RO')}
-              </p>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>Creat pe {new Date(plan.created_at).toLocaleDateString('ro-RO')}</span>
+                {plan.details?.delivery_date && (
+                  <span>• Livrare: {plan.details.delivery_date}</span>
+                )}
+                {plan.details?.plan_type === 'digital_marketing_complete' && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Plan Digital Complet
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           
@@ -1556,31 +1412,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                       }}
                     >
                       <FileText className="h-4 w-4 mr-2" />
-                      <span>Document strategic</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setExportFormat('excel');
-                        handleExport();
-                      }}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      <span>Calendar Excel (CSV)</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setExportFormat('calendar');
-                        handleExport();
-                      }}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>Calendar editorial</span>
+                      <span>Export ca Text</span>
                     </Button>
                     <Button 
                       variant="ghost" 
@@ -1592,7 +1424,19 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                       }}
                     >
                       <FileText className="h-4 w-4 mr-2" />
-                      <span>Export complet (JSON)</span>
+                      <span>Export ca JSON</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setExportFormat('calendar');
+                        handleExport();
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>Export Calendar</span>
                     </Button>
                   </div>
                 </Card>
