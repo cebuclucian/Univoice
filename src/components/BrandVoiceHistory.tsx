@@ -19,15 +19,6 @@ interface BrandVoiceHistoryItem {
   };
 }
 
-interface BrandVoiceEvolution {
-  total_plans_created: number;
-  unique_voice_versions: number;
-  first_plan_date: string;
-  last_plan_date: string;
-  most_used_personality_traits: string[];
-  most_used_tones: string[];
-}
-
 interface BrandVoiceHistoryProps {
   className?: string;
   maxItems?: number;
@@ -41,7 +32,6 @@ export const BrandVoiceHistory: React.FC<BrandVoiceHistoryProps> = ({
 }) => {
   const { user } = useAuth();
   const [history, setHistory] = useState<BrandVoiceHistoryItem[]>([]);
-  const [evolution, setEvolution] = useState<BrandVoiceEvolution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFullHistory, setShowFullHistory] = useState(false);
@@ -61,18 +51,6 @@ export const BrandVoiceHistory: React.FC<BrandVoiceHistoryProps> = ({
         if (historyError) throw historyError;
 
         setHistory(historyData || []);
-
-        // Fetch evolution data if requested
-        if (showEvolution) {
-          const { data: evolutionData, error: evolutionError } = await supabase
-            .rpc('get_brand_voice_evolution', { user_id: user.id });
-
-          if (evolutionError) {
-            console.warn('Could not fetch evolution data:', evolutionError);
-          } else if (evolutionData && evolutionData.length > 0) {
-            setEvolution(evolutionData[0]);
-          }
-        }
 
       } catch (err) {
         console.error('Error fetching brand voice history:', err);
@@ -346,7 +324,7 @@ export const BrandVoiceHistory: React.FC<BrandVoiceHistoryProps> = ({
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Trăsături dominante</h4>
                 <div className="space-y-2">
-                  {getMostUsedTraits('personality').map((trait, index) => (
+                  {getMostUsedTraits('personality').map((trait) => (
                     <div key={trait} className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       <span className="text-sm text-gray-700">{trait}</span>
@@ -362,7 +340,7 @@ export const BrandVoiceHistory: React.FC<BrandVoiceHistoryProps> = ({
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Tonuri dominante</h4>
                 <div className="space-y-2">
-                  {getMostUsedTraits('tone').map((tone, index) => (
+                  {getMostUsedTraits('tone').map((tone) => (
                     <div key={tone} className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       <span className="text-sm text-gray-700">{tone}</span>
