@@ -656,25 +656,286 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Conținut detaliat</h3>
-            <p className="text-gray-600">Postări și materiale create cu AI</p>
+            <p className="text-gray-600">Postări complete cu brief-uri vizuale și specificații</p>
           </div>
         </div>
 
-        <Card className="text-center py-8" animation="bounceIn">
-          <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl mb-4 inline-block">
-            <Zap className="h-8 w-8 text-purple-600" />
+        {plan.details?.tactical_plan_per_platform && plan.details.tactical_plan_per_platform.length > 0 ? (
+          <div className="space-y-8">
+            {plan.details.tactical_plan_per_platform.map((platform: any, platformIndex: number) => (
+              <Card 
+                key={platformIndex}
+                className={`border-l-4 ${getPlatformColor(platform.platform)}`}
+                padding="md"
+                animation="fadeInUp"
+                delay={platformIndex + 1}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${getPlatformColor(platform.platform)}`}>
+                      {getPlatformIcon(platform.platform)}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{platform.platform}</h4>
+                      <p className="text-xs text-gray-600">{platform.posting_frequency || 'Frecvență variabilă'}</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const platformContent = `Strategie ${platform.platform}:\n${platform.strategy}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}`;
+                      copyToClipboard(platformContent, `platform-content-${platformIndex}`);
+                    }}
+                    className="flex items-center space-x-1"
+                  >
+                    {copiedContentId === `platform-content-${platformIndex}` ? (
+                      <>
+                        <CheckSquare className="h-3 w-3" />
+                        <span>Copiat!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copiază strategia</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-100 mb-6">
+                  <h5 className="font-medium text-gray-800 mb-2">Strategie:</h5>
+                  <p className="text-gray-700 text-sm">{platform.strategy}</p>
+                </div>
+                
+                {/* Detailed Content from Editorial Calendar */}
+                {platform.editorial_calendar?.month_1 && (
+                  <div className="space-y-6">
+                    <h5 className="font-medium text-gray-800">Conținut detaliat:</h5>
+                    {platform.editorial_calendar.month_1.map((week: any, weekIndex: number) => (
+                      <div key={weekIndex} className="space-y-4">
+                        <h6 className="font-semibold text-gray-900 text-sm">Săptămâna {week.week}</h6>
+                        {week.posts && week.posts.length > 0 ? (
+                          <div className="space-y-4">
+                            {week.posts.map((post: any, postIndex: number) => (
+                              <Card 
+                                key={postIndex}
+                                className="bg-gray-50 border border-gray-200"
+                                padding="md"
+                                hover="subtle"
+                              >
+                                <div className="space-y-4">
+                                  {/* Post Header */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                      <span className="text-sm font-medium text-gray-900">{post.post_id}</span>
+                                      <span className="text-xs text-gray-500">{post.scheduled_date}</span>
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => {
+                                        const fullContent = `${post.copy?.main_text || ''}\n\nCTA: ${post.copy?.call_to_action || ''}\n\nHashtags: ${post.copy?.hashtags?.join(' ') || ''}`;
+                                        copyToClipboard(fullContent, `post-${platformIndex}-${weekIndex}-${postIndex}`);
+                                      }}
+                                      className="p-1 h-6 w-6"
+                                    >
+                                      {copiedContentId === `post-${platformIndex}-${weekIndex}-${postIndex}` ? (
+                                        <CheckSquare className="h-3 w-3 text-green-600" />
+                                      ) : (
+                                        <Copy className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </div>
+
+                                  {/* Main Text - FULL CONTENT */}
+                                  {post.copy?.main_text && (
+                                    <div className="bg-white p-4 rounded-lg border border-gray-100">
+                                      <h6 className="font-semibold text-gray-800 mb-2 text-sm">Copy principal:</h6>
+                                      <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                                        {post.copy.main_text}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Call to Action */}
+                                  {post.copy?.call_to_action && (
+                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                                      <h6 className="font-semibold text-purple-800 mb-1 text-sm">Call to Action:</h6>
+                                      <p className="text-purple-700 text-sm">{post.copy.call_to_action}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Hashtags */}
+                                  {post.copy?.hashtags && post.copy.hashtags.length > 0 && (
+                                    <div>
+                                      <h6 className="font-semibold text-gray-800 mb-2 text-sm">Hashtag-uri:</h6>
+                                      <div className="flex flex-wrap gap-1">
+                                        {post.copy.hashtags.map((hashtag: string, hashIndex: number) => (
+                                          <span 
+                                            key={hashIndex}
+                                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                                          >
+                                            {hashtag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Visual Brief */}
+                                  {post.visual_brief && (
+                                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                      <h6 className="font-semibold text-yellow-800 mb-3 text-sm">Brief vizual:</h6>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                        <div>
+                                          <span className="font-semibold text-yellow-800">Tip: </span>
+                                          <span className="text-yellow-700">{post.visual_brief.type}</span>
+                                        </div>
+                                        <div>
+                                          <span className="font-semibold text-yellow-800">Dimensiuni: </span>
+                                          <span className="text-yellow-700">{post.visual_brief.dimensions}</span>
+                                        </div>
+                                        <div className="md:col-span-2">
+                                          <span className="font-semibold text-yellow-800">Ghid stil: </span>
+                                          <span className="text-yellow-700">{post.visual_brief.style_guidelines}</span>
+                                        </div>
+                                        {post.visual_brief.mandatory_elements && (
+                                          <div className="md:col-span-2">
+                                            <span className="font-semibold text-yellow-800">Elemente obligatorii: </span>
+                                            <span className="text-yellow-700">{post.visual_brief.mandatory_elements.join(', ')}</span>
+                                          </div>
+                                        )}
+                                        {post.visual_brief.text_overlay && (
+                                          <div className="md:col-span-2">
+                                            <span className="font-semibold text-yellow-800">Text pe imagine: </span>
+                                            <span className="text-yellow-700">{post.visual_brief.text_overlay}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Promotion Budget */}
+                                  {post.promotion_budget && (
+                                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                      <h6 className="font-semibold text-green-800 mb-1 text-sm">Buget promovare:</h6>
+                                      <p className="text-green-700 text-sm font-medium">{post.promotion_budget}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Target Audience Specific */}
+                                  {post.target_audience_specific && (
+                                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                                      <h6 className="font-semibold text-indigo-800 mb-3 text-sm">Audiența țintă specifică:</h6>
+                                      <div className="space-y-2 text-xs">
+                                        {post.target_audience_specific.demographics && (
+                                          <div>
+                                            <span className="font-semibold text-indigo-800">Demografia: </span>
+                                            <span className="text-indigo-700">{post.target_audience_specific.demographics}</span>
+                                          </div>
+                                        )}
+                                        {post.target_audience_specific.interests && (
+                                          <div>
+                                            <span className="font-semibold text-indigo-800">Interese: </span>
+                                            <span className="text-indigo-700">{post.target_audience_specific.interests.join(', ')}</span>
+                                          </div>
+                                        )}
+                                        {post.target_audience_specific.behaviors && (
+                                          <div>
+                                            <span className="font-semibold text-indigo-800">Comportamente: </span>
+                                            <span className="text-indigo-700">{post.target_audience_specific.behaviors.join(', ')}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Individual Metrics */}
+                                  {post.individual_metrics && (
+                                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                                      <h6 className="font-semibold text-orange-800 mb-3 text-sm">Metrici individuale:</h6>
+                                      <div className="grid grid-cols-2 gap-3 text-xs">
+                                        {post.individual_metrics.primary_kpi && (
+                                          <div>
+                                            <span className="font-semibold text-orange-800">KPI principal: </span>
+                                            <span className="text-orange-700">{post.individual_metrics.primary_kpi}</span>
+                                          </div>
+                                        )}
+                                        {post.individual_metrics.target_reach && (
+                                          <div>
+                                            <span className="font-semibold text-orange-800">Reach țintă: </span>
+                                            <span className="text-orange-700">{post.individual_metrics.target_reach}</span>
+                                          </div>
+                                        )}
+                                        {post.individual_metrics.target_engagement && (
+                                          <div>
+                                            <span className="font-semibold text-orange-800">Engagement țintă: </span>
+                                            <span className="text-orange-700">{post.individual_metrics.target_engagement}</span>
+                                          </div>
+                                        )}
+                                        {post.individual_metrics.target_clicks && (
+                                          <div>
+                                            <span className="font-semibold text-orange-800">Click-uri țintă: </span>
+                                            <span className="text-orange-700">{post.individual_metrics.target_clicks}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Response Protocol */}
+                                  {post.response_protocol && (
+                                    <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                                      <h6 className="font-semibold text-gray-800 mb-3 text-sm">Protocol de răspuns:</h6>
+                                      <div className="space-y-2 text-xs">
+                                        {post.response_protocol.comment_response_time && (
+                                          <div>
+                                            <span className="font-semibold text-gray-800">Timp răspuns comentarii: </span>
+                                            <span className="text-gray-700">{post.response_protocol.comment_response_time}</span>
+                                          </div>
+                                        )}
+                                        {post.response_protocol.tone_guidelines && (
+                                          <div>
+                                            <span className="font-semibold text-gray-800">Ghid ton răspunsuri: </span>
+                                            <span className="text-gray-700">{post.response_protocol.tone_guidelines}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">Nu sunt postări pentru această săptămână</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">
-            Generator de conținut
-          </h4>
-          <p className="text-gray-600 mb-4">
-            Funcționalitatea de generare automată a conținutului va fi disponibilă în curând
-          </p>
-          <Button className="flex items-center space-x-2">
-            <Zap className="h-4 w-4" />
-            <span>Generează conținut</span>
-          </Button>
-        </Card>
+        ) : (
+          <Card className="text-center py-8" animation="bounceIn">
+            <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl mb-4 inline-block">
+              <Zap className="h-8 w-8 text-purple-600" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">
+              Conținut în dezvoltare
+            </h4>
+            <p className="text-gray-600 mb-4">
+              Conținutul detaliat va fi disponibil în curând
+            </p>
+            <Button className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span>Generează conținut</span>
+            </Button>
+          </Card>
+        )}
       </Card>
     </div>
   );
