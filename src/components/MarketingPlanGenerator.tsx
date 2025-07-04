@@ -74,35 +74,70 @@ export const MarketingPlanGenerator: React.FC<MarketingPlanGeneratorProps> = ({
     }));
   };
 
-  // Robust JSON extraction and parsing function
+  // Enhanced JSON extraction and parsing function with better comment removal
   const extractAndParseJSON = (text: string): any => {
     try {
       // First, try to parse the text directly as JSON
       return JSON.parse(text);
     } catch (error) {
-      // If direct parsing fails, try to extract JSON from the text
+      // If direct parsing fails, try to extract and clean JSON from the text
       try {
+        let cleanText = text;
+        
         // Remove markdown code blocks if present
-        let cleanText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        cleanText = cleanText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Remove single-line comments (// comment)
+        cleanText = cleanText.replace(/\/\/.*$/gm, '');
+        
+        // Remove multi-line comments (/* comment */)
+        cleanText = cleanText.replace(/\/\*[\s\S]*?\*\//g, '');
+        
+        // Remove any remaining comment-like patterns
+        cleanText = cleanText.replace(/\/\/[^\n\r]*/g, '');
+        
+        // Remove any lines that start with // (after trimming whitespace)
+        cleanText = cleanText.replace(/^\s*\/\/.*$/gm, '');
+        
+        // Clean up extra whitespace and newlines
+        cleanText = cleanText.replace(/\n\s*\n/g, '\n').trim();
         
         // Look for JSON object boundaries
         const jsonStart = cleanText.indexOf('{');
         const jsonEnd = cleanText.lastIndexOf('}');
         
         if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-          const jsonString = cleanText.substring(jsonStart, jsonEnd + 1);
+          let jsonString = cleanText.substring(jsonStart, jsonEnd + 1);
+          
+          // Additional cleaning for any remaining comment artifacts
+          jsonString = jsonString.replace(/,\s*\/\/[^\n]*/g, ',');
+          jsonString = jsonString.replace(/{\s*\/\/[^\n]*/g, '{');
+          jsonString = jsonString.replace(/}\s*\/\/[^\n]*/g, '}');
+          jsonString = jsonString.replace(/"\s*\/\/[^\n]*/g, '"');
+          
+          // Remove any trailing commas before closing braces/brackets
+          jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+          
           return JSON.parse(jsonString);
         }
         
-        // Try to find JSON using regex
+        // Try to find JSON using regex as fallback
         const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
+          let jsonString = jsonMatch[0];
+          
+          // Clean the matched JSON string
+          jsonString = jsonString.replace(/\/\/.*$/gm, '');
+          jsonString = jsonString.replace(/\/\*[\s\S]*?\*\//g, '');
+          jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+          
+          return JSON.parse(jsonString);
         }
         
         throw new Error('No valid JSON found in response');
       } catch (parseError) {
         console.error('Failed to extract JSON from response:', parseError);
+        console.error('Original text:', text.substring(0, 500) + '...');
         throw new Error('Could not parse AI response as JSON');
       }
     }
@@ -156,91 +191,7 @@ EXEMPLU DE CONȚINUT BRAND (PĂSTREAZĂ ACEST STIL):
 ${brandProfile.content_example_1}
 ${brandProfile.content_example_2 ? `\n${brandProfile.content_example_2}` : ''}
 
-🚨 INSTRUCȚIUNI CRITICE PENTRU CONȚINUT 100% UNIC 🚨
-
-REGULI ABSOLUTE PENTRU CONȚINUTUL POSTĂRILOR:
-1. FIECARE "main_text" TREBUIE să fie COMPLET DIFERIT și ORIGINAL
-2. NU REPETA NICIODATĂ același conținut între postări
-3. FIECARE postare trebuie să aibă un SUBIECT DIFERIT
-4. FIECARE postare trebuie să aibă o ABORDARE DIFERITĂ
-5. FIECARE postare trebuie să aibă între 200-400 cuvinte
-6. FOLOSEȘTE diferite tipuri de conținut pentru fiecare postare
-7. VARIAZĂ tonul și stilul în cadrul vocii brandului
-8. FIECARE postare trebuie să fie GATA DE PUBLICARE
-
-TIPURI DE CONȚINUT OBLIGATORII PENTRU VARIAȚIE (folosește câte unul pentru fiecare postare):
-- EDUCAȚIONAL: Tips, how-to, ghiduri practice, insights din industrie
-- INSPIRAȚIONAL: Povești de succes, citate motivaționale, viziuni
-- PROMOTIONAL: Prezentarea produselor/serviciilor, oferte speciale
-- BEHIND-THE-SCENES: Procesul de lucru, echipa, cultura companiei
-- USER-GENERATED: Testimoniale, reviews, experiențe clienți
-- TRENDING: Evenimente actuale, sărbători, tendințe din industrie
-- INTERACTIVE: Întrebări, poll-uri, provocări pentru audiență
-- STORYTELLING: Povestea brandului, călătoria antreprenorială
-- PROBLEM-SOLVING: Soluții la probleme comune ale audiența
-- COMMUNITY: Construirea comunității, valori comune
-
-EXEMPLE DE SUBIECTE DIFERITE PENTRU FIECARE POSTARE:
-P001: Ghid practic despre [subiect specific din industrie]
-P002: Povestea din spatele [aspect specific al brandului]
-P003: Prezentarea [produs/serviciu specific]
-P004: Tips pentru [problemă specifică a audiența]
-P005: Behind-the-scenes din [proces specific]
-P006: Testimonial de la [tip specific de client]
-P007: Tendințe în [domeniu specific]
-P008: Întrebare pentru comunitate despre [subiect specific]
-P009: Soluție la [problemă comună specifică]
-P010: Celebrarea [realizare/milestone specific]
-
-STRUCTURA OBLIGATORIE PENTRU FIECARE POSTARE:
-{
-  "post_id": "P001",
-  "post_title": "TITLU UNIC ȘI DESCRIPTIV PENTRU ACEASTĂ POSTARE SPECIFICĂ",
-  "content_type": "educational/inspirational/promotional/behind_scenes/ugc/trending/interactive/storytelling/problem_solving/community",
-  "scheduled_date": "Data și ora exactă",
-  "copy": {
-    "main_text": "CONȚINUT COMPLET UNIC PENTRU ACEASTĂ POSTARE SPECIFICĂ - minim 200 cuvinte, maxim 400 cuvinte. 
-
-    🚨 ACEST TEXT TREBUIE SĂ FIE COMPLET DIFERIT PENTRU FIECARE POSTARE! 🚨
-    
-    Nu repeta niciodată același conținut. Scrie în vocea brandului ${brandProfile.brand_name} folosind personalitatea: ${brandProfile.personality_traits.join(', ')} și tonul: ${brandProfile.communication_tones.join(', ')}.
-    
-    Pentru această postare specifică, abordează un subiect complet diferit de celelalte postări. Folosește un unghi unic, oferă informații specifice, și creează o experiență de lectură distinctă.
-    
-    Conținutul trebuie să fie gata de publicare, nu un placeholder. Fiecare propoziție trebuie să aducă valoare și să fie scrisă special pentru această postare.",
-    
-    "call_to_action": "Call-to-action specific și măsurabil pentru această postare exactă",
-    "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
-  },
-  "visual_brief": {
-    "type": "imagine/video/carousel",
-    "dimensions": "Dimensiunile exacte",
-    "style_guidelines": "Ghidul de stil specific pentru această postare",
-    "mandatory_elements": ["element 1", "element 2"],
-    "color_palette": ["culoare 1", "culoare 2"],
-    "text_overlay": "Textul specific de pe imagine/video pentru această postare"
-  },
-  "promotion_budget": "Bugetul de promovare pentru această postare",
-  "target_audience_specific": {
-    "demographics": "Demografia țintă specifică pentru această postare",
-    "interests": ["interes 1", "interes 2"],
-    "behaviors": ["comportament 1", "comportament 2"],
-    "custom_audiences": ["audiență 1", "audiență 2"]
-  },
-  "individual_metrics": {
-    "primary_kpi": "KPI-ul principal urmărit pentru această postare",
-    "target_reach": "Reach-ul țintă specific",
-    "target_engagement": "Engagement-ul țintă specific",
-    "target_clicks": "Click-urile țintă specifice",
-    "target_conversions": "Conversiile țintă specifice"
-  },
-  "response_protocol": {
-    "comment_response_time": "Timpul de răspuns la comentarii",
-    "message_response_time": "Timpul de răspuns la mesaje",
-    "escalation_procedure": "Procedura de escaladare",
-    "tone_guidelines": "Ghidul de ton pentru răspunsuri la această postare"
-  }
-}
+IMPORTANT: Răspunde DOAR cu JSON valid, fără comentarii, fără text suplimentar, fără caractere speciale în afara JSON-ului.
 
 Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următoarea structură:
 {
@@ -312,7 +263,7 @@ Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următ
         "justification": "Justificarea alegerii",
         "audience_overlap": "Suprapunerea cu audiența țintă",
         "expected_roi": "ROI-ul așteptat",
-        "priority_level": "high/medium/low"
+        "priority_level": "high"
       }
     ],
     "excluded_platforms": [
@@ -352,28 +303,25 @@ Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următ
           {
             "week": 1,
             "posts": [
-              // AICI TREBUIE SĂ GENEREZI 20-30 POSTĂRI COMPLET UNICE
-              // FIECARE CU CONȚINUT TOTAL DIFERIT
-              // FOLOSIND TIPURILE DE CONȚINUT DE MAI SUS
-              // ȘI ASIGURÂNDU-TE CĂ FIECARE "main_text" ESTE ORIGINAL
-            ]
-          },
-          {
-            "week": 2,
-            "posts": [
-              // CONTINUĂ CU POSTĂRI UNICE
-            ]
-          },
-          {
-            "week": 3,
-            "posts": [
-              // CONTINUĂ CU POSTĂRI UNICE
-            ]
-          },
-          {
-            "week": 4,
-            "posts": [
-              // CONTINUĂ CU POSTĂRI UNICE
+              {
+                "post_id": "P001",
+                "post_title": "Titlu unic pentru postare",
+                "content_type": "educational",
+                "scheduled_date": "Data și ora exactă",
+                "copy": {
+                  "main_text": "Conținut complet unic pentru această postare specifică - minim 200 cuvinte",
+                  "call_to_action": "Call-to-action specific",
+                  "hashtags": ["#hashtag1", "#hashtag2"]
+                },
+                "visual_brief": {
+                  "type": "imagine",
+                  "dimensions": "1080x1080px",
+                  "style_guidelines": "Ghidul de stil",
+                  "mandatory_elements": ["element 1", "element 2"],
+                  "color_palette": ["culoare 1", "culoare 2"],
+                  "text_overlay": "Text pe imagine"
+                }
+              }
             ]
           }
         ]
@@ -389,73 +337,18 @@ Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următ
         "measurement_frequency": "Frecvența măsurării",
         "data_source": "Sursa datelor"
       }
-    ],
-    "performance_evaluation_schedule": {
-      "7_day_review": {
-        "focus_areas": ["zona 1", "zona 2"],
-        "key_metrics": ["metrică 1", "metrică 2"],
-        "action_items": ["acțiune 1", "acțiune 2"]
-      },
-      "15_day_review": {
-        "focus_areas": ["zona 1", "zona 2"],
-        "key_metrics": ["metrică 1", "metrică 2"],
-        "action_items": ["acțiune 1", "acțiune 2"]
-      },
-      "30_day_review": {
-        "focus_areas": ["zona 1", "zona 2"],
-        "key_metrics": ["metrică 1", "metrică 2"],
-        "action_items": ["acțiune 1", "acțiune 2"]
-      }
-    },
-    "adjustment_recommendations": [
-      {
-        "trigger_condition": "Condiția care declanșează ajustarea",
-        "recommended_action": "Acțiunea recomandată",
-        "implementation_timeline": "Cronologia implementării",
-        "expected_impact": "Impactul așteptat"
-      }
-    ],
-    "dedicated_responsibilities": [
-      {
-        "role": "Rolul/Funcția",
-        "responsibilities": ["responsabilitate 1", "responsabilitate 2"],
-        "time_allocation": "Alocarea timpului",
-        "required_skills": ["abilitate 1", "abilitate 2"]
-      }
     ]
   },
   "deliverables": {
-    "strategic_document": "Document strategic complet cu toate secțiunile de mai sus",
-    "excel_editorial_calendar": "Calendar editorial în format Excel cu toate postările programate",
-    "creative_briefs": "Brief-uri creative detaliate pentru fiecare tip de conținut",
+    "strategic_document": "Document strategic complet",
+    "excel_editorial_calendar": "Calendar editorial în format Excel",
+    "creative_briefs": "Brief-uri creative detaliate",
     "monitoring_dashboard": "Dashboard pentru monitorizarea performanței",
     "optimization_playbook": "Ghid de optimizare și ajustare"
   }
 }
 
-🚨 VERIFICARE FINALĂ OBLIGATORIE 🚨
-Înainte de a trimite răspunsul, VERIFICĂ că:
-1. Fiecare postare are un "main_text" COMPLET DIFERIT
-2. Nu există repetări de conținut între postări
-3. Fiecare postare abordează un subiect DIFERIT
-4. Fiecare postare are între 200-400 cuvinte
-5. Ai folosit tipuri diferite de conținut pentru fiecare postare
-6. Fiecare postare este gata de publicare
-7. Toate postările respectă vocea brandului dar sunt UNICE
-
-IMPORTANT: Asigură-te că planul:
-1. Reflectă EXACT vocea și personalitatea brandului definită
-2. Este adaptat platformelor selectate
-3. Include conținut specific și acționabil în stilul brandului
-4. Respectă bugetul și perioada specificată
-5. Include KPI-uri măsurabile și SMART
-6. Oferă recomandări practice și implementabile
-7. Toate textele sunt scrise în vocea curentă a brandului
-8. Calendarul editorial conține 20-30 postări UNICE per platformă
-9. Fiecare postare are copy complet UNIC, brief vizual și specificații de promovare
-10. Include protocoale de răspuns și responsabilități clare
-
-Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
+Răspunde DOAR cu JSON-ul valid, fără text suplimentar, fără comentarii.
 `;
 
       // Apelează funcția edge pentru generarea cu AI
