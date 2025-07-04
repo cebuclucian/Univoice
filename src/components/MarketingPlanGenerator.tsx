@@ -115,7 +115,7 @@ export const MarketingPlanGenerator: React.FC<MarketingPlanGeneratorProps> = ({
     setError(null);
 
     try {
-      // Construiește prompt-ul extins pentru AI folosind vocea curentă a brandului
+      // Construiește prompt-ul extins pentru AI cu accent pe unicitatea conținutului
       const prompt = `
 Creează un plan de marketing digital COMPLET și DETALIAT în format JSON pentru următorul brand, folosind EXACT vocea și personalitatea definită:
 
@@ -156,15 +156,29 @@ EXEMPLU DE CONȚINUT BRAND (PĂSTREAZĂ ACEST STIL):
 ${brandProfile.content_example_1}
 ${brandProfile.content_example_2 ? `\n${brandProfile.content_example_2}` : ''}
 
-INSTRUCȚIUNI CRITICE:
+INSTRUCȚIUNI CRITICE PENTRU CONȚINUT UNIC:
 1. Folosește EXACT personalitatea și tonul definit în profilul brandului
 2. Tot conținutul generat TREBUIE să reflecte vocea curentă a brandului
 3. Păstrează stilul și abordarea din exemplele de conținut
 4. Nu schimba sau îmbunătățește vocea - folosește-o exact cum este definită
 5. Asigură-te că fiecare postare sună ca și cum ar fi scrisă de același brand
-6. Toate KPI-urile trebuie să fie SMART (Specific, Măsurabil, Realizabil, Relevant, Încadrat în Timp)
-7. Calendarul editorial trebuie să conțină 20-30 postări per platformă pentru perioada specificată
-8. Fiecare postare trebuie să aibă copy complet, brief vizual și specificații de promovare
+
+**FOARTE IMPORTANT PENTRU CONȚINUTUL POSTĂRILOR:**
+- Fiecare "main_text" din editorial_calendar TREBUIE să fie COMPLET DIFERIT și UNIC
+- Nu repeta niciodată același text pentru postări diferite
+- Fiecare postare trebuie să aibă un conținut original de 150-300 cuvinte
+- Variază subiectele, abordările și call-to-action-urile
+- Folosește diferite tipuri de conținut: educațional, inspirațional, promotional, behind-the-scenes
+- Fiecare postare trebuie să fie gata de publicare, nu un placeholder
+
+TIPURI DE CONȚINUT PENTRU VARIAȚIE:
+- Postări educaționale (tips, how-to, insights)
+- Conținut inspirațional (quotes, success stories)
+- Behind-the-scenes (procesul de lucru, echipa)
+- Conținut promotional (produse/servicii, oferte)
+- User-generated content (testimoniale, reviews)
+- Conținut de trending topics (evenimente, sărbători)
+- Interactive content (întrebări, poll-uri, quiz-uri)
 
 Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următoarea structură:
 {
@@ -278,11 +292,52 @@ Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următ
             "posts": [
               {
                 "post_id": "P001",
+                "post_title": "Titlu unic și descriptiv pentru această postare specifică",
+                "content_type": "educational/inspirational/promotional/behind_scenes/ugc/trending/interactive",
                 "scheduled_date": "Data și ora exactă",
                 "copy": {
-                  "main_text": "Textul principal al postării (max 2000 caractere, optimizat SEO)",
-                  "call_to_action": "Call-to-action specific și măsurabil",
+                  "main_text": "CONȚINUT COMPLET UNIC PENTRU ACEASTĂ POSTARE SPECIFICĂ - minim 150 cuvinte, maxim 300 cuvinte. Acest text trebuie să fie COMPLET DIFERIT pentru fiecare postare. Nu repeta niciodată același conținut. Scrie în vocea brandului ${brandProfile.brand_name} folosind personalitatea: ${brandProfile.personality_traits.join(', ')} și tonul: ${brandProfile.communication_tones.join(', ')}. Conținutul trebuie să fie gata de publicare, nu un placeholder.",
+                  "call_to_action": "Call-to-action specific și măsurabil pentru această postare",
                   "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
+                },
+                "visual_brief": {
+                  "type": "imagine/video/carousel",
+                  "dimensions": "Dimensiunile exacte",
+                  "style_guidelines": "Ghidul de stil",
+                  "mandatory_elements": ["element 1", "element 2"],
+                  "color_palette": ["culoare 1", "culoare 2"],
+                  "text_overlay": "Textul de pe imagine/video"
+                },
+                "promotion_budget": "Bugetul de promovare pentru această postare",
+                "target_audience_specific": {
+                  "demographics": "Demografia țintă specifică",
+                  "interests": ["interes 1", "interes 2"],
+                  "behaviors": ["comportament 1", "comportament 2"],
+                  "custom_audiences": ["audiență 1", "audiență 2"]
+                },
+                "individual_metrics": {
+                  "primary_kpi": "KPI-ul principal urmărit",
+                  "target_reach": "Reach-ul țintă",
+                  "target_engagement": "Engagement-ul țintă",
+                  "target_clicks": "Click-urile țintă",
+                  "target_conversions": "Conversiile țintă"
+                },
+                "response_protocol": {
+                  "comment_response_time": "Timpul de răspuns la comentarii",
+                  "message_response_time": "Timpul de răspuns la mesaje",
+                  "escalation_procedure": "Procedura de escaladare",
+                  "tone_guidelines": "Ghidul de ton pentru răspunsuri"
+                }
+              },
+              {
+                "post_id": "P002",
+                "post_title": "Alt titlu complet diferit pentru a doua postare",
+                "content_type": "promotional/educational/inspirational/behind_scenes/ugc/trending/interactive",
+                "scheduled_date": "Data și ora exactă diferită",
+                "copy": {
+                  "main_text": "CONȚINUT COMPLET DIFERIT PENTRU A DOUA POSTARE - minim 150 cuvinte, maxim 300 cuvinte. Acest text TREBUIE să fie TOTAL DIFERIT de P001. Abordează un subiect diferit, folosește un unghi diferit, dar păstrează vocea brandului ${brandProfile.brand_name}. Scrie despre un aspect diferit al business-ului sau oferă o perspectivă nouă. NICIODATĂ nu copia textul din alte postări.",
+                  "call_to_action": "Call-to-action diferit și specific pentru această postare",
+                  "hashtags": ["#hashtag4", "#hashtag5", "#hashtag6"]
                 },
                 "visual_brief": {
                   "type": "imagine/video/carousel",
@@ -372,6 +427,16 @@ Te rog să creezi un plan de marketing digital COMPLET în format JSON cu următ
   }
 }
 
+REGULI ABSOLUTE PENTRU CONȚINUTUL POSTĂRILOR:
+1. Fiecare "main_text" TREBUIE să fie UNIC și ORIGINAL
+2. Nu repeta niciodată același conținut între postări
+3. Variază subiectele și abordările pentru fiecare postare
+4. Fiecare postare trebuie să aibă între 150-300 cuvinte
+5. Folosește diferite tipuri de conținut (educațional, inspirațional, promotional, etc.)
+6. Păstrează vocea brandului dar variază mesajele
+7. Fiecare postare trebuie să fie gata de publicare
+8. Generează cel puțin 20-30 postări UNICE per platformă pentru perioada specificată
+
 IMPORTANT: Asigură-te că planul:
 1. Reflectă EXACT vocea și personalitatea brandului definită
 2. Este adaptat platformelor selectate
@@ -380,8 +445,8 @@ IMPORTANT: Asigură-te că planul:
 5. Include KPI-uri măsurabile și SMART
 6. Oferă recomandări practice și implementabile
 7. Toate textele sunt scrise în vocea curentă a brandului
-8. Calendarul editorial conține 20-30 postări per platformă
-9. Fiecare postare are copy complet, brief vizual și specificații de promovare
+8. Calendarul editorial conține 20-30 postări UNICE per platformă
+9. Fiecare postare are copy complet UNIC, brief vizual și specificații de promovare
 10. Include protocoale de răspuns și responsabilități clare
 
 Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
@@ -409,7 +474,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         planData = extractAndParseJSON(data.response);
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
-        // Fallback plan cu structura extinsă
+        // Fallback plan cu structura extinsă și conținut unic
         planData = generateFallbackPlan();
       }
 
@@ -462,7 +527,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         .insert({
           user_id: user.id,
           title: 'Plan de marketing digital generat cu succes',
-          details: `Planul complet "${planData.title}" a fost generat folosind vocea curentă a brandului. Include strategie detaliată, calendar editorial cu 20-30 postări per platformă, KPI-uri SMART și protocoale de monitorizare.`,
+          details: `Planul complet "${planData.title}" a fost generat folosind vocea curentă a brandului. Include strategie detaliată, calendar editorial cu 20-30 postări UNICE per platformă, KPI-uri SMART și protocoale de monitorizare.`,
           is_read: false
         });
 
@@ -475,9 +540,84 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
   };
 
   const generateFallbackPlan = () => {
+    // Generează conținut unic pentru fiecare postare în fallback
+    const generateUniquePost = (postId: string, platform: string, contentType: string, index: number) => {
+      const contentVariations = [
+        {
+          type: 'educational',
+          title: `Ghid practic pentru ${brandProfile.brand_name}`,
+          content: `Astăzi vreau să vă împărtășesc câteva insights importante despre ${brandProfile.brand_description.toLowerCase()}. În experiența noastră, am observat că mulți clienți se confruntă cu provocări similare. De aceea, am pregătit acest ghid practic care vă va ajuta să înțelegeți mai bine procesul nostru și să obțineți rezultatele dorite. Primul pas este să identificați exact ce aveți nevoie. Al doilea pas implică o planificare atentă. Și cel mai important - nu ezitați să ne contactați pentru sfaturi personalizate!`
+        },
+        {
+          type: 'inspirational',
+          title: `Povestea din spatele ${brandProfile.brand_name}`,
+          content: `Fiecare zi aduce noi provocări și oportunități. Astăzi vreau să vă povestesc despre călătoria noastră și despre ce ne motivează să continuăm. Când am început, visul nostru era să ${brandProfile.brand_description.toLowerCase()}. Nu a fost ușor, dar pasiunea și dedicarea echipei noastre ne-au ajutat să depășim toate obstacolele. Fiecare client pe care îl ajutăm ne confirmă că suntem pe drumul cel bun. Voi ce vise aveți? Împărțiți-le cu noi în comentarii!`
+        },
+        {
+          type: 'promotional',
+          title: `Ofertă specială de la ${brandProfile.brand_name}`,
+          content: `Avem o veste minunată pentru voi! Pentru că apreciați calitatea și profesionalismul nostru, am pregătit o ofertă specială limitată. ${brandProfile.brand_description} cu o abordare personalizată și rezultate garantate. Această ofertă este valabilă doar pentru următoarele zile, așa că nu ratați ocazia. Echipa noastră este pregătită să vă ofere cea mai bună experiență. Contactați-ne acum pentru detalii complete și să discutăm despre nevoile voastre specifice!`
+        },
+        {
+          type: 'behind_scenes',
+          title: `În culisele ${brandProfile.brand_name}`,
+          content: `Vreau să vă arăt cum arată o zi obișnuită în echipa noastră. Dimineața începe cu planificarea proiectelor și sincronizarea echipei. Fiecare membru aduce expertiza sa unică pentru a livra rezultate excepționale. Procesul nostru de lucru este meticulos - de la prima consultare până la livrarea finală. Ceea ce ne diferențiază este atenția la detalii și pasiunea pentru perfecțiune. Suntem mândri de ceea ce facem și se vede în fiecare proiect finalizat!`
+        },
+        {
+          type: 'interactive',
+          title: `Întrebare pentru comunitatea ${brandProfile.brand_name}`,
+          content: `Astăzi vreau să vă pun o întrebare importantă: Care este cea mai mare provocare cu care vă confruntați în domeniul nostru? În conversațiile cu clienții, am observat că fiecare are o perspectivă unică și experiențe diferite. De aceea, vreau să creez un spațiu de dialog unde să ne putem ajuta reciproc. Împărtășiți experiențele voastre în comentarii - poate găsiți soluții de la alți membri ai comunității noastre. Împreună suntem mai puternici!`
+        }
+      ];
+
+      const variation = contentVariations[index % contentVariations.length];
+      
+      return {
+        post_id: postId,
+        post_title: variation.title,
+        content_type: variation.type,
+        scheduled_date: `Săptămâna 1, Ziua ${index + 1}, ${9 + (index % 3)}:00`,
+        copy: {
+          main_text: variation.content,
+          call_to_action: index % 3 === 0 ? "Contactați-ne pentru o consultare gratuită" : 
+                         index % 3 === 1 ? "Urmăriți-ne pentru mai multe insights" : 
+                         "Împărtășiți această postare cu prietenii",
+          hashtags: [`#${brandProfile.brand_name.replace(/\s+/g, '')}`, "#marketing", "#calitate", `#${variation.type}`]
+        },
+        visual_brief: {
+          type: "imagine",
+          dimensions: "1080x1080px",
+          style_guidelines: "Stil consistent cu identitatea brandului",
+          mandatory_elements: ["Logo", "Culorile brandului"],
+          color_palette: ["#2563eb", "#ffffff"],
+          text_overlay: `Text minimal pentru ${variation.type}`
+        },
+        promotion_budget: "50 RON",
+        target_audience_specific: {
+          demographics: "25-45 ani, urban",
+          interests: ["Business", "Inovație"],
+          behaviors: ["Activi online"],
+          custom_audiences: ["Website visitors", "Email subscribers"]
+        },
+        individual_metrics: {
+          primary_kpi: "Engagement rate",
+          target_reach: "1000 persoane",
+          target_engagement: "5%",
+          target_clicks: "50",
+          target_conversions: "5"
+        },
+        response_protocol: {
+          comment_response_time: "2 ore",
+          message_response_time: "1 oră",
+          escalation_procedure: "Escaladare către manager după 24h",
+          tone_guidelines: "Ton prietenos și profesional, conform vocii brandului"
+        }
+      };
+    };
+
     return {
       title: `Plan de Marketing Digital pentru ${brandProfile.brand_name}`,
-      summary: `Plan de marketing digital complet pentru ${formData.objective} pe o perioadă de ${formData.timeframe}, folosind vocea curentă a brandului.`,
+      summary: `Plan de marketing digital complet pentru ${formData.objective} pe o perioadă de ${formData.timeframe}, folosind vocea curentă a brandului cu conținut unic pentru fiecare postare.`,
       delivery_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('ro-RO'),
       brand_voice_used: {
         personality: brandProfile.personality_traits,
@@ -586,43 +726,9 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
             month_1: [
               {
                 week: 1,
-                posts: Array.from({ length: 5 }, (_, i) => ({
-                  post_id: `P00${i + 1}`,
-                  scheduled_date: `Săptămâna 1, Ziua ${i + 1}, 09:00`,
-                  copy: {
-                    main_text: `Conținut personalizat pentru ${brandProfile.brand_name} în stilul definit: ${brandProfile.content_example_1.substring(0, 100)}...`,
-                    call_to_action: "Află mai multe despre soluțiile noastre",
-                    hashtags: [`#${brandProfile.brand_name.replace(/\s+/g, '')}`, "#marketing", "#calitate"]
-                  },
-                  visual_brief: {
-                    type: "imagine",
-                    dimensions: "1080x1080px",
-                    style_guidelines: "Stil consistent cu identitatea brandului",
-                    mandatory_elements: ["Logo", "Culorile brandului"],
-                    color_palette: ["#2563eb", "#ffffff"],
-                    text_overlay: "Text minimal, focusat pe mesaj"
-                  },
-                  promotion_budget: "50 RON",
-                  target_audience_specific: {
-                    demographics: "25-45 ani, urban",
-                    interests: ["Business", "Inovație"],
-                    behaviors: ["Activi online"],
-                    custom_audiences: ["Website visitors", "Email subscribers"]
-                  },
-                  individual_metrics: {
-                    primary_kpi: "Engagement rate",
-                    target_reach: "1000 persoane",
-                    target_engagement: "5%",
-                    target_clicks: "50",
-                    target_conversions: "5"
-                  },
-                  response_protocol: {
-                    comment_response_time: "2 ore",
-                    message_response_time: "1 oră",
-                    escalation_procedure: "Escaladare către manager după 24h",
-                    tone_guidelines: "Ton prietenos și profesional, conform vocii brandului"
-                  }
-                }))
+                posts: Array.from({ length: 5 }, (_, i) => 
+                  generateUniquePost(`P00${i + 1}`, platform?.name || platformId, 'mixed', i)
+                )
               }
             ]
           }
@@ -673,7 +779,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
         dedicated_responsibilities: [
           {
             role: "Content Creator",
-            responsibilities: ["Crearea conținutului", "Programarea postărilor", "Răspunsuri la comentarii"],
+            responsibilities: ["Crearea conținutului unic", "Programarea postărilor", "Răspunsuri la comentarii"],
             time_allocation: "20 ore/săptămână",
             required_skills: ["Copywriting", "Design grafic", "Social media management"]
           },
@@ -687,7 +793,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
       },
       deliverables: {
         strategic_document: "Document strategic complet cu toate secțiunile planului",
-        excel_editorial_calendar: "Calendar editorial în Excel cu toate postările programate",
+        excel_editorial_calendar: "Calendar editorial în Excel cu toate postările unice programate",
         creative_briefs: "Brief-uri creative pentru fiecare tip de conținut",
         monitoring_dashboard: "Dashboard pentru monitorizarea performanței în timp real",
         optimization_playbook: "Ghid de optimizare și proceduri de ajustare"
@@ -713,7 +819,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Plan de Marketing Digital Generat!</h2>
             <p className="text-gray-600">
-              Planul tău complet de marketing digital este gata, cu toate detaliile și specificațiile necesare.
+              Planul tău complet de marketing digital este gata, cu conținut unic pentru fiecare postare.
             </p>
           </div>
         </Card>
@@ -726,7 +832,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">{generatedPlan.title}</h3>
-              <p className="text-gray-600">Plan de marketing digital complet</p>
+              <p className="text-gray-600">Plan de marketing digital complet cu conținut unic</p>
             </div>
           </div>
 
@@ -743,7 +849,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Calendar editorial cu 20-30 postări/platformă</span>
+                    <span className="text-gray-700">Calendar editorial cu conținut UNIC pentru fiecare postare</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -782,6 +888,23 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           </div>
         </Card>
 
+        {/* Unique Content Notice */}
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200" animation="slideInLeft">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Sparkles className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-2">Conținut unic pentru fiecare postare</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                Fiecare postare din calendarul editorial are conținut complet unic și original, 
+                scris în vocea brandului tău. Nu există repetări - fiecare text este gândit special 
+                pentru acea postare specifică și este gata de publicare.
+              </p>
+            </div>
+          </div>
+        </Card>
+
         {/* Action Buttons */}
         <Card className="text-center" animation="fadeInUp">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -813,7 +936,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Generator Plan de Marketing Digital</h1>
           <p className="text-gray-600 text-lg">
-            Creează un plan complet de marketing digital pentru <strong>{brandProfile.brand_name}</strong>
+            Creează un plan complet de marketing digital cu conținut unic pentru <strong>{brandProfile.brand_name}</strong>
           </p>
         </div>
       </Card>
@@ -948,7 +1071,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Lightbulb className="h-6 w-6 text-yellow-500" />
             <p className="text-gray-600">
-              AI-ul va crea un plan complet de marketing digital cu toate detaliile necesare pentru implementare
+              AI-ul va crea un plan complet cu conținut UNIC pentru fiecare postare - fără repetări!
             </p>
           </div>
           
@@ -960,7 +1083,7 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
             className="text-lg px-8 py-4"
           >
             <Sparkles className="h-6 w-6 mr-3" />
-            {loading ? 'Generez planul complet...' : 'Generează Plan de Marketing Digital'}
+            {loading ? 'Generez planul cu conținut unic...' : 'Generează Plan cu Conținut Unic'}
           </Button>
           
           {!isFormValid() && (
