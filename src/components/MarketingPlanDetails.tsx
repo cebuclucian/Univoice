@@ -332,7 +332,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     {Array.isArray(currentPlan.details.brand_voice_used.personality) 
                       ? currentPlan.details.brand_voice_used.personality.join(', ')
                       : currentPlan.details.brand_voice_used.personality
-                    }
+                     }
                   </span>
                 </div>
                 <div>
@@ -341,7 +341,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
                     {Array.isArray(currentPlan.details.brand_voice_used.tone)
                       ? currentPlan.details.brand_voice_used.tone.join(', ')
                       : currentPlan.details.brand_voice_used.tone
-                    }
+                     }
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
