@@ -81,6 +81,13 @@ export const MarketingPlans: React.FC = () => {
     setViewMode('details');
   };
 
+  const handlePlanUpdated = (updatedPlan: MarketingPlan) => {
+    setMarketingPlans(prev => 
+      prev.map(plan => plan.id === updatedPlan.id ? updatedPlan : plan)
+    );
+    setSelectedPlan(updatedPlan);
+  };
+
   const handleDeletePlan = async (planId: string) => {
     if (!confirm('Ești sigur că vrei să ștergi acest plan?')) return;
 
@@ -145,9 +152,9 @@ export const MarketingPlans: React.FC = () => {
             setSelectedPlan(null);
           }}
           onEdit={() => {
-            // TODO: Implement edit functionality
-            console.log('Edit plan:', selectedPlan.id);
+            // Edit functionality is handled within MarketingPlanDetails
           }}
+          onPlanUpdated={handlePlanUpdated}
         />
       </LazyWrapper>
     );
@@ -264,24 +271,37 @@ export const MarketingPlans: React.FC = () => {
                       {plan.title}
                     </h3>
                     <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-                      {plan.details?.summary || 'Plan de marketing personalizat'}
+                      {plan.details?.summary || plan.details?.objective || 'Plan de marketing personalizat'}
                     </p>
                   </div>
                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => handleViewPlan(plan)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewPlan(plan);
+                      }}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewPlan(plan);
+                      }}
+                    >
                       <Edit3 className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => handleDeletePlan(plan.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePlan(plan.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -357,6 +377,11 @@ export const MarketingPlans: React.FC = () => {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <span className="text-xs text-gray-500">
                     {new Date(plan.created_at).toLocaleDateString('ro-RO')}
+                    {plan.details?.last_edited && (
+                      <span className="ml-2">
+                        • Editat: {new Date(plan.details.last_edited).toLocaleDateString('ro-RO')}
+                      </span>
+                    )}
                   </span>
                   <Button 
                     size="sm" 

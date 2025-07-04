@@ -156,6 +156,14 @@ export const Dashboard: React.FC = () => {
     navigate('/app/plans');
   };
 
+  const handleViewPlan = (planId: string) => {
+    navigate(`/app/plans?view=${planId}`);
+  };
+
+  const handleEditPlan = (planId: string) => {
+    navigate(`/app/plans?edit=${planId}`);
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -410,6 +418,7 @@ export const Dashboard: React.FC = () => {
         {/* Calendar/Timeline */}
         <Card className="lg:col-span-2 shadow-lg" animation="slideInLeft" hover="subtle">
           <div className="flex items-center justify-between mb-6">
+            
             <h2 className="text-2xl font-bold text-gray-900">Calendar săptămânal</h2>
             <Button variant="outline" size="sm" className="flex items-center space-x-2 micro-bounce">
               <Calendar className="h-4 w-4" />
@@ -551,7 +560,7 @@ export const Dashboard: React.FC = () => {
                   hover="subtle"
                   animation="fadeInUp"
                   delay={index + 1}
-                  onClick={() => navigate('/app/plans')}
+                  onClick={() => handleViewPlan(plan.id)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -581,9 +590,28 @@ export const Dashboard: React.FC = () => {
                       </div>
                     </div>
                     
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 ml-3">
-                      Activ
-                    </span>
+                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewPlan(plan.id);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditPlan(plan.id);
+                        }}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
