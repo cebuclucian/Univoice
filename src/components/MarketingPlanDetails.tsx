@@ -39,6 +39,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   const exportLinkRef = useRef<HTMLAnchorElement>(null);
 
   const getPlatformIcon = (platformName: string) => {
+    if (!platformName) return <MessageSquare className="h-4 w-4" />;
     const name = platformName.toLowerCase();
     if (name.includes('facebook')) return <Facebook className="h-4 w-4" />;
     if (name.includes('instagram')) return <Instagram className="h-4 w-4" />;
@@ -52,6 +53,7 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   };
 
   const getPlatformColor = (platformName: string) => {
+    if (!platformName) return 'bg-gray-100 text-gray-700 border-gray-200';
     const name = platformName.toLowerCase();
     if (name.includes('facebook')) return 'bg-blue-100 text-blue-700 border-blue-200';
     if (name.includes('instagram')) return 'bg-pink-100 text-pink-700 border-pink-200';
@@ -512,44 +514,49 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {plan.details.platforms.map((platform: any, index: number) => (
-              <Card 
-                key={index}
-                className={`border-l-4 ${getPlatformColor(platform.name).includes('blue') ? 'border-blue-400' : 
-                  getPlatformColor(platform.name).includes('pink') ? 'border-pink-400' :
-                  getPlatformColor(platform.name).includes('sky') ? 'border-sky-400' :
-                  getPlatformColor(platform.name).includes('indigo') ? 'border-indigo-400' :
-                  'border-gray-400'
-                }`}
-                padding="sm"
-                hover="subtle"
-              >
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`p-2 rounded-lg ${getPlatformColor(platform.name)}`}>
-                    {getPlatformIcon(platform.name)}
+            {plan.details.platforms.map((platform: any, index: number) => {
+              const platformName = platform?.name || 'Platform necunoscut';
+              const platformColor = getPlatformColor(platformName);
+              
+              return (
+                <Card 
+                  key={index}
+                  className={`border-l-4 ${platformColor.includes('blue') ? 'border-blue-400' : 
+                    platformColor.includes('pink') ? 'border-pink-400' :
+                    platformColor.includes('sky') ? 'border-sky-400' :
+                    platformColor.includes('indigo') ? 'border-indigo-400' :
+                    'border-gray-400'
+                  }`}
+                  padding="sm"
+                  hover="subtle"
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`p-2 rounded-lg ${platformColor}`}>
+                      {getPlatformIcon(platformName)}
+                    </div>
+                    <h4 className="font-semibold text-gray-900">{platformName}</h4>
                   </div>
-                  <h4 className="font-semibold text-gray-900">{platform.name}</h4>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <p className="text-gray-700">{platform.strategy}</p>
                   
-                  {platform.content_types && (
-                    <div>
-                      <span className="font-semibold text-gray-800">Tipuri conținut: </span>
-                      <span className="text-gray-600">{platform.content_types.join(', ')}</span>
-                    </div>
-                  )}
-                  
-                  {platform.posting_frequency && (
-                    <div>
-                      <span className="font-semibold text-gray-800">Frecvență: </span>
-                      <span className="text-gray-600">{platform.posting_frequency}</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-700">{platform.strategy || 'Strategie nedefinită'}</p>
+                    
+                    {platform.content_types && (
+                      <div>
+                        <span className="font-semibold text-gray-800">Tipuri conținut: </span>
+                        <span className="text-gray-600">{platform.content_types.join(', ')}</span>
+                      </div>
+                    )}
+                    
+                    {platform.posting_frequency && (
+                      <div>
+                        <span className="font-semibold text-gray-800">Frecvență: </span>
+                        <span className="text-gray-600">{platform.posting_frequency}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </Card>
       )}
@@ -609,68 +616,73 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {week.content?.map((content: any, contentIndex: number) => (
-                    <Card 
-                      key={contentIndex}
-                      className={`border-l-4 ${getPlatformColor(content.platform)}`}
-                      padding="sm"
-                      hover="subtle"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className={`p-1 rounded ${getPlatformColor(content.platform)}`}>
-                            {getPlatformIcon(content.platform)}
-                          </div>
-                          <span className="font-semibold text-gray-900 text-sm">
-                            {content.platform}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {content.type}
-                          </span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => copyToClipboard(content.description, `content-${weekIndex}-${contentIndex}`)}
-                          className="p-1 h-6 w-6"
-                        >
-                          {copiedContentId === `content-${weekIndex}-${contentIndex}` ? (
-                            <CheckSquare className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </div>
-                      
-                      <h5 className="font-semibold text-gray-800 mb-2 text-sm">
-                        {content.title}
-                      </h5>
-                      
-                      <div className="bg-white p-2 rounded-md border border-gray-100 mb-3 text-xs text-gray-700 max-h-24 overflow-y-auto">
-                        {content.description}
-                      </div>
-                      
-                      {content.hashtags && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {content.hashtags.map((hashtag: string, hashIndex: number) => (
-                            <span 
-                              key={hashIndex}
-                              className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
-                            >
-                              {hashtag}
+                  {week.content?.map((content: any, contentIndex: number) => {
+                    const platformName = content?.platform || 'Platform necunoscut';
+                    const platformColor = getPlatformColor(platformName);
+                    
+                    return (
+                      <Card 
+                        key={contentIndex}
+                        className={`border-l-4 ${platformColor}`}
+                        padding="sm"
+                        hover="subtle"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className={`p-1 rounded ${platformColor}`}>
+                              {getPlatformIcon(platformName)}
+                            </div>
+                            <span className="font-semibold text-gray-900 text-sm">
+                              {platformName}
                             </span>
-                          ))}
+                            <span className="text-xs text-gray-500">
+                              {content.type || 'Post'}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => copyToClipboard(content.description || '', `content-${weekIndex}-${contentIndex}`)}
+                            className="p-1 h-6 w-6"
+                          >
+                            {copiedContentId === `content-${weekIndex}-${contentIndex}` ? (
+                              <CheckSquare className="h-3 w-3 text-green-600" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
                         </div>
-                      )}
-                      
-                      {content.call_to_action && (
-                        <div className="text-xs text-gray-600 italic flex items-center space-x-1">
-                          <Zap className="h-3 w-3 text-amber-500" />
-                          <span>CTA: {content.call_to_action}</span>
+                        
+                        <h5 className="font-semibold text-gray-800 mb-2 text-sm">
+                          {content.title || 'Titlu nedefinit'}
+                        </h5>
+                        
+                        <div className="bg-white p-2 rounded-md border border-gray-100 mb-3 text-xs text-gray-700 max-h-24 overflow-y-auto">
+                          {content.description || 'Descriere nedefinită'}
                         </div>
-                      )}
-                    </Card>
-                  ))}
+                        
+                        {content.hashtags && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {content.hashtags.map((hashtag: string, hashIndex: number) => (
+                              <span 
+                                key={hashIndex}
+                                className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
+                              >
+                                {hashtag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {content.call_to_action && (
+                          <div className="text-xs text-gray-600 italic flex items-center space-x-1">
+                            <Zap className="h-3 w-3 text-amber-500" />
+                            <span>CTA: {content.call_to_action}</span>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </div>
               </Card>
             ))}
@@ -724,98 +736,103 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
 
         {plan.details?.platforms && plan.details.platforms.length > 0 ? (
           <div className="space-y-8">
-            {plan.details.platforms.map((platform: any, platformIndex: number) => (
-              <Card 
-                key={platformIndex}
-                className={`border-l-4 ${getPlatformColor(platform.name).includes('blue') ? 'border-blue-400' : 
-                  getPlatformColor(platform.name).includes('pink') ? 'border-pink-400' :
-                  getPlatformColor(platform.name).includes('sky') ? 'border-sky-400' :
-                  getPlatformColor(platform.name).includes('indigo') ? 'border-indigo-400' :
-                  'border-gray-400'
-                }`}
-                padding="md"
-                animation="fadeInUp"
-                delay={platformIndex + 1}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${getPlatformColor(platform.name)}`}>
-                      {getPlatformIcon(platform.name)}
+            {plan.details.platforms.map((platform: any, platformIndex: number) => {
+              const platformName = platform?.name || 'Platform necunoscut';
+              const platformColor = getPlatformColor(platformName);
+              
+              return (
+                <Card 
+                  key={platformIndex}
+                  className={`border-l-4 ${platformColor.includes('blue') ? 'border-blue-400' : 
+                    platformColor.includes('pink') ? 'border-pink-400' :
+                    platformColor.includes('sky') ? 'border-sky-400' :
+                    platformColor.includes('indigo') ? 'border-indigo-400' :
+                    'border-gray-400'
+                  }`}
+                  padding="md"
+                  animation="fadeInUp"
+                  delay={platformIndex + 1}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${platformColor}`}>
+                        {getPlatformIcon(platformName)}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{platformName}</h4>
+                        <p className="text-xs text-gray-600">{platform.posting_frequency || 'Frecvență variabilă'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{platform.name}</h4>
-                      <p className="text-xs text-gray-600">{platform.posting_frequency || 'Frecvență variabilă'}</p>
-                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const platformContent = `Strategie ${platformName}:\n${platform.strategy || 'Strategie nedefinită'}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}`;
+                        copyToClipboard(platformContent, `platform-${platformIndex}`);
+                      }}
+                      className="flex items-center space-x-1"
+                    >
+                      {copiedContentId === `platform-${platformIndex}` ? (
+                        <>
+                          <CheckSquare className="h-3 w-3" />
+                          <span>Copiat!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          <span>Copiază strategia</span>
+                        </>
+                      )}
+                    </Button>
                   </div>
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      const platformContent = `Strategie ${platform.name}:\n${platform.strategy}\n\nTipuri conținut: ${platform.content_types?.join(', ') || 'N/A'}\nFrecvență: ${platform.posting_frequency || 'N/A'}`;
-                      copyToClipboard(platformContent, `platform-${platformIndex}`);
-                    }}
-                    className="flex items-center space-x-1"
-                  >
-                    {copiedContentId === `platform-${platformIndex}` ? (
-                      <>
-                        <CheckSquare className="h-3 w-3" />
-                        <span>Copiat!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" />
-                        <span>Copiază strategia</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border border-gray-100 mb-4">
-                  <h5 className="font-medium text-gray-800 mb-2">Strategie:</h5>
-                  <p className="text-gray-700 text-sm">{platform.strategy}</p>
-                </div>
-                
-                {plan.details?.content_calendar && (
-                  <div className="space-y-4">
-                    <h5 className="font-medium text-gray-800">Exemple de conținut:</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {plan.details.content_calendar
-                        .flatMap((week: any) => week.content || [])
-                        .filter((content: any) => content.platform.toLowerCase() === platform.name.toLowerCase())
-                        .slice(0, 4)
-                        .map((content: any, contentIndex: number) => (
-                          <Card 
-                            key={contentIndex}
-                            className="bg-gray-50"
-                            padding="sm"
-                            hover="subtle"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-medium text-gray-700">{content.type}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => copyToClipboard(content.description, `platform-content-${platformIndex}-${contentIndex}`)}
-                                className="p-1 h-6 w-6"
-                              >
-                                {copiedContentId === `platform-content-${platformIndex}-${contentIndex}` ? (
-                                  <CheckSquare className="h-3 w-3 text-green-600" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                            <h6 className="font-medium text-gray-800 text-sm mb-1">{content.title}</h6>
-                            <p className="text-xs text-gray-600 line-clamp-3">{content.description}</p>
-                          </Card>
-                        ))
-                      }
-                    </div>
+                  <div className="bg-white p-4 rounded-lg border border-gray-100 mb-4">
+                    <h5 className="font-medium text-gray-800 mb-2">Strategie:</h5>
+                    <p className="text-gray-700 text-sm">{platform.strategy || 'Strategie nedefinită'}</p>
                   </div>
-                )}
-              </Card>
-            ))}
+                  
+                  {plan.details?.content_calendar && (
+                    <div className="space-y-4">
+                      <h5 className="font-medium text-gray-800">Exemple de conținut:</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {plan.details.content_calendar
+                          .flatMap((week: any) => week.content || [])
+                          .filter((content: any) => (content?.platform || '').toLowerCase() === platformName.toLowerCase())
+                          .slice(0, 4)
+                          .map((content: any, contentIndex: number) => (
+                            <Card 
+                              key={contentIndex}
+                              className="bg-gray-50"
+                              padding="sm"
+                              hover="subtle"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-gray-700">{content.type || 'Post'}</span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => copyToClipboard(content.description || '', `platform-content-${platformIndex}-${contentIndex}`)}
+                                  className="p-1 h-6 w-6"
+                                >
+                                  {copiedContentId === `platform-content-${platformIndex}-${contentIndex}` ? (
+                                    <CheckSquare className="h-3 w-3 text-green-600" />
+                                  ) : (
+                                    <Copy className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              </div>
+                              <h6 className="font-medium text-gray-800 text-sm mb-1">{content.title || 'Titlu nedefinit'}</h6>
+                              <p className="text-xs text-gray-600 line-clamp-3">{content.description || 'Descriere nedefinită'}</p>
+                            </Card>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card className="text-center py-8" animation="bounceIn">
@@ -873,22 +890,25 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {week.posts?.map((post: any, postIndex: number) => {
                     const postId = `${weekIndex}-${postIndex}`;
+                    const platformName = post?.platform || 'Platform necunoscut';
+                    const platformColor = getPlatformColor(platformName);
+                    
                     return (
                       <Card 
                         key={postIndex}
-                        className={`border-l-4 ${getPlatformColor(post.platform)} shadow-md`}
+                        className={`border-l-4 ${platformColor} shadow-md`}
                         padding="md"
                         hover="subtle"
                       >
                         {/* Post Header */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-lg ${getPlatformColor(post.platform)}`}>
-                              {getPlatformIcon(post.platform)}
+                            <div className={`p-2 rounded-lg ${platformColor}`}>
+                              {getPlatformIcon(platformName)}
                             </div>
                             <div>
-                              <h5 className="font-semibold text-gray-900">{post.platform}</h5>
-                              <span className="text-xs text-gray-600">{post.content_type}</span>
+                              <h5 className="font-semibold text-gray-900">{platformName}</h5>
+                              <span className="text-xs text-gray-600">{post.content_type || 'Post'}</span>
                             </div>
                           </div>
                           <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
@@ -902,7 +922,7 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                           <div>
                             <h6 className="font-semibold text-gray-800 mb-2">Titlu:</h6>
                             <p className="text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
-                              {post.title}
+                              {post.title || 'Titlu nedefinit'}
                             </p>
                           </div>
 
@@ -911,14 +931,14 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                             <h6 className="font-semibold text-gray-800 mb-2">Conținut principal:</h6>
                             <div className="bg-white p-3 rounded-lg border border-gray-200 max-h-32 overflow-y-auto">
                               <p className="text-gray-700 text-sm leading-relaxed">
-                                {post.main_text || post.description}
+                                {post.main_text || post.description || 'Conținut nedefinit'}
                               </p>
                             </div>
                             <div className="flex justify-end mt-2">
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => copyToClipboard(post.main_text || post.description, `main-text-${postId}`)}
+                                onClick={() => copyToClipboard(post.main_text || post.description || '', `main-text-${postId}`)}
                                 className="text-xs"
                               >
                                 {copiedContentId === `main-text-${postId}` ? (
@@ -943,7 +963,7 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => handleImageSuggestion(post, post.platform, postId)}
+                                onClick={() => handleImageSuggestion(post, platformName, postId)}
                                 className="flex items-center space-x-1 text-xs"
                               >
                                 {copiedImagePrompt === postId ? (
@@ -1038,7 +1058,7 @@ Prompt pentru AI: "${post.title || 'Marketing content'}, ${brandPersonality} bra
                               variant="outline" 
                               size="sm"
                               onClick={() => {
-                                const fullPost = `${post.title}\n\n${post.main_text || post.description}\n\n${post.hashtags ? post.hashtags.join(' ') : ''}\n\n${post.call_to_action || ''}`;
+                                const fullPost = `${post.title || 'Titlu nedefinit'}\n\n${post.main_text || post.description || 'Conținut nedefinit'}\n\n${post.hashtags ? post.hashtags.join(' ') : ''}\n\n${post.call_to_action || ''}`;
                                 copyToClipboard(fullPost, `full-post-${postId}`);
                               }}
                               className="w-full flex items-center justify-center space-x-2"
