@@ -5,8 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
-import { MarketingPlanGenerator } from '../components/MarketingPlanGenerator';
-import { MarketingPlanDetails } from '../components/MarketingPlanDetails';
+import { LazyWrapper, LazyMarketingPlanGenerator, LazyMarketingPlanDetails, PlanGeneratorSkeleton, ComponentSkeleton } from '../components/LazyComponents';
 
 interface BrandProfile {
   id: string;
@@ -107,10 +106,12 @@ export const MarketingPlans: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </Card>
+        <ComponentSkeleton />
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <ComponentSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -136,17 +137,19 @@ export const MarketingPlans: React.FC = () => {
   // Show plan details
   if (viewMode === 'details' && selectedPlan) {
     return (
-      <MarketingPlanDetails
-        plan={selectedPlan}
-        onBack={() => {
-          setViewMode('list');
-          setSelectedPlan(null);
-        }}
-        onEdit={() => {
-          // TODO: Implement edit functionality
-          console.log('Edit plan:', selectedPlan.id);
-        }}
-      />
+      <LazyWrapper fallback={<ComponentSkeleton />}>
+        <LazyMarketingPlanDetails
+          plan={selectedPlan}
+          onBack={() => {
+            setViewMode('list');
+            setSelectedPlan(null);
+          }}
+          onEdit={() => {
+            // TODO: Implement edit functionality
+            console.log('Edit plan:', selectedPlan.id);
+          }}
+        />
+      </LazyWrapper>
     );
   }
 
@@ -168,10 +171,12 @@ export const MarketingPlans: React.FC = () => {
           </div>
         </Card>
 
-        <MarketingPlanGenerator 
-          brandProfile={brandProfile}
-          onPlanGenerated={handlePlanGenerated}
-        />
+        <LazyWrapper fallback={<PlanGeneratorSkeleton />}>
+          <LazyMarketingPlanGenerator 
+            brandProfile={brandProfile}
+            onPlanGenerated={handlePlanGenerated}
+          />
+        </LazyWrapper>
       </div>
     );
   }
@@ -284,42 +289,54 @@ export const MarketingPlans: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {plan.details?.objectives && (
+                  {plan.details?.kpis_smart && (
                     <div>
-                      <h4 className="font-semibold text-gray-800 text-sm mb-2">Obiective:</h4>
+                      <h4 className="font-semibold text-gray-800 text-sm mb-2">KPI-uri SMART:</h4>
                       <ul className="space-y-1">
-                        {plan.details.objectives.slice(0, 2).map((objective: string, idx: number) => (
+                        {plan.details.kpis_smart.slice(0, 2).map((kpi: any, idx: number) => (
                           <li key={idx} className="text-xs text-gray-600 flex items-start space-x-1">
-                            <span className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></span>
-                            <span className="line-clamp-1">{objective}</span>
+                            <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                            <span className="line-clamp-1">{kpi.name}: {kpi.target_value}</span>
                           </li>
                         ))}
-                        {plan.details.objectives.length > 2 && (
+                        {plan.details.kpis_smart.length > 2 && (
                           <li className="text-xs text-gray-500">
-                            +{plan.details.objectives.length - 2} obiective
+                            +{plan.details.kpis_smart.length - 2} KPI-uri
                           </li>
                         )}
                       </ul>
                     </div>
                   )}
 
-                  {plan.details?.platforms && (
+                  {plan.details?.tactical_plan_per_platform && (
                     <div>
                       <h4 className="font-semibold text-gray-800 text-sm mb-2">Platforme:</h4>
                       <div className="flex flex-wrap gap-1">
-                        {plan.details.platforms.slice(0, 3).map((platform: any, idx: number) => (
+                        {plan.details.tactical_plan_per_platform.slice(0, 3).map((platform: any, idx: number) => (
                           <span 
                             key={idx}
                             className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
                           >
-                            {platform.name}
+                            {platform.platform}
                           </span>
                         ))}
-                        {plan.details.platforms.length > 3 && (
+                        {plan.details.tactical_plan_per_platform.length > 3 && (
                           <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                            +{plan.details.platforms.length - 3}
+                            +{plan.details.tactical_plan_per_platform.length - 3}
                           </span>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan Type Indicator */}
+                  {plan.details?.plan_type === 'digital_marketing_complete' && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-gray-500">
+                          Plan Digital Complet
+                        </span>
                       </div>
                     </div>
                   )}

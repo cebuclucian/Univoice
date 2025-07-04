@@ -19,7 +19,7 @@ export const LazyNotificationCenter = lazy(() =>
   import('./NotificationCenter').then(module => ({ default: module.NotificationCenter }))
 );
 
-// Loading fallback components
+// Enhanced loading fallback components
 export const ComponentSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
   <Card className={`animate-pulse ${className}`}>
     <div className="space-y-4">
@@ -113,27 +113,54 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
   );
 };
 
-// Simple error boundary
+// Enhanced error boundary with retry functionality
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; error?: Error }
 > {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(): { hasError: boolean } {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Lazy component error:', error, errorInfo);
+    
+    // Report to monitoring service if available
+    if (window.gtag) {
+      window.gtag('event', 'exception', {
+        description: error.message,
+        fatal: false
+      });
+    }
   }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback;
+      return (
+        <Card className="text-center py-8 border-red-200 bg-red-50">
+          <div className="space-y-4">
+            <div className="text-red-600">
+              <h3 className="font-semibold mb-2">Eroare la încărcarea componentei</h3>
+              <p className="text-sm">{this.state.error?.message || 'Eroare necunoscută'}</p>
+            </div>
+            <button
+              onClick={this.handleRetry}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Încearcă din nou
+            </button>
+          </div>
+        </Card>
+      );
     }
 
     return this.props.children;

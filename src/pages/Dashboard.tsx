@@ -12,7 +12,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { SkeletonLoader, CardSkeleton } from '../components/ui/SkeletonLoader';
-import { BrandVoiceAnalysis } from '../components/BrandVoiceAnalysis';
+import { LazyWrapper, LazyBrandVoiceAnalysis, AnalysisSkeleton } from '../components/LazyComponents';
 import { UsageStats } from '../components/UsageStats';
 import { BrandVoiceHistory } from '../components/BrandVoiceHistory';
 
@@ -205,13 +205,15 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
 
-        <BrandVoiceAnalysis 
-          brandProfile={brandProfile}
-          onAnalysisComplete={(result) => {
-            console.log('Analysis completed:', result);
-          }}
-          onBrandProfileUpdated={handleBrandProfileUpdated}
-        />
+        <LazyWrapper fallback={<AnalysisSkeleton />}>
+          <LazyBrandVoiceAnalysis 
+            brandProfile={brandProfile}
+            onAnalysisComplete={(result) => {
+              console.log('Analysis completed:', result);
+            }}
+            onBrandProfileUpdated={handleBrandProfileUpdated}
+          />
+        </LazyWrapper>
       </div>
     );
   }
@@ -557,13 +559,19 @@ export const Dashboard: React.FC = () => {
                         {plan.title}
                       </h3>
                       <p className="text-gray-600 text-sm mt-1 line-clamp-1">
-                        {plan.details?.objective || 'Plan de marketing'}
+                        {plan.details?.summary || plan.details?.objective || 'Plan de marketing'}
                       </p>
                       
                       <div className="flex items-center space-x-3 mt-2">
                         <span className="text-xs text-gray-500">
                           {new Date(plan.created_at).toLocaleDateString('ro-RO')}
                         </span>
+                        {plan.details?.plan_type === 'digital_marketing_complete' && (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-gray-500">Plan Digital Complet</span>
+                          </div>
+                        )}
                         {plan.details?.brand_voice_used && (
                           <div className="flex items-center space-x-1">
                             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
