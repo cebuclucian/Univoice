@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, Target, Calendar, BarChart3, Crown, Sparkles, TrendingUp, Users, Edit3,
   Clock, CheckCircle, AlertCircle, Zap, Brain, MessageSquare, Instagram,
-  Facebook, Twitter, Mail, Globe, ArrowRight, Star, Bell, Settings, Wand2
+  Facebook, Twitter, Mail, Globe, ArrowRight, Star, Bell, Settings, Wand2, Eye
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
