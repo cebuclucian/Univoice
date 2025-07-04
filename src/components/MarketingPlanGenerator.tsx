@@ -74,6 +74,40 @@ export const MarketingPlanGenerator: React.FC<MarketingPlanGeneratorProps> = ({
     }));
   };
 
+  // Robust JSON extraction and parsing function
+  const extractAndParseJSON = (text: string): any => {
+    try {
+      // First, try to parse the text directly as JSON
+      return JSON.parse(text);
+    } catch (error) {
+      // If direct parsing fails, try to extract JSON from the text
+      try {
+        // Remove markdown code blocks if present
+        let cleanText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Look for JSON object boundaries
+        const jsonStart = cleanText.indexOf('{');
+        const jsonEnd = cleanText.lastIndexOf('}');
+        
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          const jsonString = cleanText.substring(jsonStart, jsonEnd + 1);
+          return JSON.parse(jsonString);
+        }
+        
+        // Try to find JSON using regex
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        
+        throw new Error('No valid JSON found in response');
+      } catch (parseError) {
+        console.error('Failed to extract JSON from response:', parseError);
+        throw new Error('Could not parse AI response as JSON');
+      }
+    }
+  };
+
   const generateMarketingPlan = async () => {
     if (!user || !brandProfile) return;
 
@@ -369,16 +403,10 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
 
       const data = await response.json();
       
-      // Parse the JSON response from AI
+      // Parse the JSON response from AI using robust extraction
       let planData: any;
       try {
-        // Extract JSON from the response text
-        const jsonMatch = data.response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          planData = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No valid JSON found in response');
-        }
+        planData = extractAndParseJSON(data.response);
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
         // Fallback plan cu structura extinsă
@@ -418,9 +446,9 @@ Răspunde DOAR cu JSON-ul valid, fără text suplimentar.
       setGeneratedPlan({ ...planData, id: savedPlan.id });
       onPlanGenerated?.(savedPlan);
 
-      // Actualizează contorul de planuri generate folosind RPC
+      // Actualizează contorul de planuri generate folosind RPC cu parametrul corect
       const { error: updateError } = await supabase.rpc('increment_plans_generated', {
-        user_id: user.id
+        input_user_id: user.id
       });
 
       if (updateError) {
