@@ -165,17 +165,28 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     
     let text = `CALENDAR DE CONȚINUT: ${title}\n\n`;
     
-    if (details?.editorial_calendar && details.editorial_calendar.length > 0) {
-      details.editorial_calendar.forEach((week: any) => {
+    // Check both possible calendar structures
+    const calendar = details?.editorial_calendar || details?.content_calendar;
+    
+    if (calendar && calendar.length > 0) {
+      calendar.forEach((week: any) => {
         text += `SĂPTĂMÂNA ${week.week_number || week.week}\n`;
         text += '='.repeat(20) + '\n\n';
         
-        if (week.posts && week.posts.length > 0) {
-          week.posts.forEach((post: any) => {
-            text += `${(post.platform || 'Platform necunoscut').toUpperCase()} | ${post.content_type || post.type}\n`;
+        // Check both possible post structures
+        const posts = week.posts || week.content;
+        
+        if (posts && posts.length > 0) {
+          posts.forEach((post: any) => {
+            const platform = post.platform || 'Platform necunoscut';
+            const contentType = post.content_type || post.type || 'Post';
+            const title = post.title || 'Fără titlu';
+            const content = post.main_text || post.description || 'Fără conținut';
+            
+            text += `${platform.toUpperCase()} | ${contentType}\n`;
             text += '-'.repeat(40) + '\n';
-            text += `Titlu: ${post.title || 'Fără titlu'}\n`;
-            text += `Conținut: ${post.main_text || post.description || 'Fără conținut'}\n`;
+            text += `Titlu: ${title}\n`;
+            text += `Conținut: ${content}\n`;
             
             if (post.hashtags && post.hashtags.length > 0) {
               text += `Hashtag-uri: ${post.hashtags.join(' ')}\n`;
@@ -422,7 +433,7 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
         </Card>
       )}
 
-      {/* Platforms */}
+      {/* Platforms - Support both structures */}
       {(plan.details?.platforms || plan.details?.tactical_plan_per_platform) && (
         <Card className="shadow-lg" animation="fadeInUp" hover="subtle">
           <div className="flex items-center space-x-3 mb-6">
@@ -490,9 +501,10 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
           </div>
         </div>
 
-        {plan.details?.editorial_calendar ? (
+        {/* Support both calendar structures */}
+        {(plan.details?.editorial_calendar || plan.details?.content_calendar) ? (
           <div className="space-y-6">
-            {plan.details.editorial_calendar.map((week: any, weekIndex: number) => (
+            {(plan.details.editorial_calendar || plan.details.content_calendar || []).map((week: any, weekIndex: number) => (
               <Card 
                 key={weekIndex}
                 className="bg-gray-50"
@@ -508,7 +520,9 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      const weekContent = week.posts?.map((post: any) => 
+                      // Support both post structures
+                      const posts = week.posts || week.content || [];
+                      const weekContent = posts.map((post: any) => 
                         `${post.platform || 'Platform necunoscut'} (${post.content_type || post.type}): ${post.title || 'Fără titlu'}\n${post.main_text || post.description || 'Fără conținut'}\n${post.hashtags ? post.hashtags.join(' ') : ''}\n${post.call_to_action || ''}`
                       ).join('\n\n') || 'Nu există conținut pentru această săptămână';
                       copyToClipboard(weekContent, `week-${weekIndex}`);
@@ -530,7 +544,8 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {week.posts?.map((post: any, postIndex: number) => (
+                  {/* Support both post structures */}
+                  {(week.posts || week.content || []).map((post: any, postIndex: number) => (
                     <Card 
                       key={postIndex}
                       className={`border-l-4 ${getPlatformColor(post.platform)}`}
@@ -617,7 +632,10 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
                         </div>
                       </div>
                     </Card>
-                  )) || (
+                  ))}
+                  
+                  {/* Show message if no posts */}
+                  {(!week.posts && !week.content) || (week.posts || week.content || []).length === 0 && (
                     <div className="col-span-full text-center py-4 text-gray-500">
                       Nu există postări planificate pentru această săptămână
                     </div>
@@ -641,7 +659,7 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
         )}
 
         {/* Export Calendar Button */}
-        {plan.details?.editorial_calendar && (
+        {(plan.details?.editorial_calendar || plan.details?.content_calendar) && (
           <div className="mt-6 flex justify-center">
             <Button 
               variant="outline" 
@@ -673,6 +691,7 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
           </div>
         </div>
 
+        {/* Support both platform structures */}
         {(plan.details?.platforms || plan.details?.tactical_plan_per_platform) && (plan.details.platforms || plan.details.tactical_plan_per_platform).length > 0 ? (
           <div className="space-y-8">
             {(plan.details.platforms || plan.details.tactical_plan_per_platform || []).map((platform: any, platformIndex: number) => (
@@ -727,12 +746,13 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
                   <p className="text-gray-700 text-sm">{platform.strategy}</p>
                 </div>
                 
-                {plan.details?.editorial_calendar && (
+                {/* Support both calendar structures */}
+                {(plan.details?.editorial_calendar || plan.details?.content_calendar) && (
                   <div className="space-y-4">
                     <h5 className="font-medium text-gray-800">Exemple de conținut:</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {plan.details.editorial_calendar
-                        .flatMap((week: any) => week.posts || [])
+                      {(plan.details.editorial_calendar || plan.details.content_calendar || [])
+                        .flatMap((week: any) => week.posts || week.content || [])
                         .filter((post: any) => (post.platform || '').toLowerCase() === (platform.name || platform.platform || '').toLowerCase())
                         .slice(0, 4)
                         .map((post: any, contentIndex: number) => (
@@ -802,6 +822,7 @@ Răspunde DOAR cu promptul pentru imagine, fără explicații suplimentare.
           </div>
         </div>
 
+        {/* Support both KPI structures */}
         {(plan.details?.kpis || plan.details?.kpis_smart) ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(plan.details.kpis || plan.details.kpis_smart || []).map((kpi: any, index: number) => (
