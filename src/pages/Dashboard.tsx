@@ -770,9 +770,6 @@ export const Dashboard: React.FC = () => {
               {brandProfile ? 'Analizează vocea' : 'Configurează vocea'}
             </span>
           </Button>
-        </div>
-      </Card>
-    </div>
 
     {/* Quick Content Generator Modal */}
     {brandProfile && (
@@ -786,5 +783,8 @@ export const Dashboard: React.FC = () => {
         focusType={quickGeneratorFocus}
       />
     )}
+    </div>
+  );
+};
   );
 };
