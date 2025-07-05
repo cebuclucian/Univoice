@@ -3,7 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Layout } from './components/Layout';
 import { Auth } from './pages/Auth';
-import { Dashboard } from './pages/Dashboard';
+import Dashboard from './pages/Dashboard';
 import { Onboarding } from './pages/Onboarding';
 import { Account } from './pages/Account';
 import { MarketingPlans } from './pages/MarketingPlans';
