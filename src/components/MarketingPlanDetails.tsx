@@ -50,6 +50,18 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
+  // Scroll la postarea selectată când se schimbă tabul
+  useEffect(() => {
+    if (activeTab === 'posts' && selectedPostId) {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-post-id="${selectedPostId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [activeTab, selectedPostId]);
+
   // Mock data pentru postări sociale - extins pentru o lună întreagă
   const [socialPosts] = useState<SocialPost[]>([
     // Săptămâna 1
@@ -249,6 +261,19 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     return colors[platform] || 'bg-gray-100 text-gray-700 border-gray-200';
   };
 
+  if (isEditing) {
+    return (
+      <MarketingPlanEditor
+        plan={plan}
+        onSave={(updatedPlan) => {
+          setIsEditing(false);
+          onPlanUpdated(updatedPlan);
+        }}
+        onCancel={() => setIsEditing(false)}
+      />
+    );
+  }
+
   const handleSuggestImages = async (postId: string) => {
     const post = socialPosts.find(p => p.id === postId);
     if (!post) return;
@@ -377,19 +402,6 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
     
     return weeks;
   };
-
-  if (isEditing) {
-    return (
-      <MarketingPlanEditor
-        plan={plan}
-        onSave={(updatedPlan) => {
-          setIsEditing(false);
-          onPlanUpdated(updatedPlan);
-        }}
-        onCancel={() => setIsEditing(false)}
-      />
-    );
-  }
 
   const renderOverviewTab = () => (
     <div className="space-y-8">
@@ -1156,18 +1168,6 @@ export const MarketingPlanDetails: React.FC<MarketingPlanDetailsProps> = ({
       </Card>
     </div>
   );
-
-  // Scroll la postarea selectată când se schimbă tabul
-  useEffect(() => {
-    if (activeTab === 'posts' && selectedPostId) {
-      setTimeout(() => {
-        const element = document.querySelector(`[data-post-id="${selectedPostId}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-    }
-  }, [activeTab, selectedPostId]);
 
   return (
     <div className="space-y-8">
