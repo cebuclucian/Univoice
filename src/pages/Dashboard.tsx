@@ -307,11 +307,14 @@ export default function Dashboard() {
       </Card>
 
       {/* Marketing Plan Generator Modal */}
-      <MarketingPlanGenerator
-        isOpen={showGenerator}
-        onClose={() => setShowGenerator(false)}
-        onPlanGenerated={loadDashboardData}
-      />
+      {brandProfile && (
+        <MarketingPlanGenerator
+          isOpen={showGenerator}
+          onClose={() => setShowGenerator(false)}
+          onPlanGenerated={loadDashboardData}
+          brandProfile={brandProfile}
+        />
+      )}
 
       {/* Quick Content Generator Modal */}
       {brandProfile && (
