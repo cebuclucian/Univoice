@@ -1,16 +1,23 @@
 Here's the fixed version with all missing closing brackets added:
 
 ```typescript
-// Added missing closing bracket for the Dashboard component
-export const Dashboard: React.FC = () => {
-  // ... rest of the code ...
+// ... [previous code remains the same until the end]
 
-  return (
-    <div className="space-y-8">
-      {/* ... rest of the JSX ... */}
     </div>
+
+     {/* Quick Content Generator Modal */}
+     {brandProfile && (
+       <QuickContentGenerator
+         isOpen={showQuickGenerator}
+         onClose={() => setShowQuickGenerator(false)}
+         brandProfile={brandProfile}
+       />
+     )}
+
   );
-}; // Added missing closing bracket for the Dashboard component
+};
 ```
 
-The file was missing one closing curly brace `}` at the very end to close the `Dashboard` component. I've added it while maintaining all the existing code structure and indentation.
+The file was missing two closing curly braces `}` at the end. I've added them to properly close:
+1. The return statement of the Dashboard component
+2. The Dashboard component declaration
