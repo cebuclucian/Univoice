@@ -148,9 +148,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Tablou de bord</h1>
           <p className="text-gray-600 mt-1">
-            Welcome back! Here's what's happening with your marketing.
+            Bine ai revenit! Iată ce se întâmplă cu marketingul tău.
           </p>
         </div>
         <NotificationCenter />
@@ -161,7 +161,7 @@ export default function Dashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Plans</p>
+              <p className="text-sm font-medium text-gray-600">Total planuri</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.totalPlans || 0}
               </p>
@@ -173,7 +173,7 @@ export default function Dashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">This Month</p>
+              <p className="text-sm font-medium text-gray-600">Luna aceasta</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.plansThisMonth || 0}
               </p>
@@ -185,7 +185,7 @@ export default function Dashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Plans</p>
+              <p className="text-sm font-medium text-gray-600">Planuri active</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.activePlans || 0}
               </p>
@@ -197,7 +197,7 @@ export default function Dashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Brand Profiles</p>
+              <p className="text-sm font-medium text-gray-600">Profile de brand</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.uniqueBrandProfiles || 0}
               </p>
@@ -212,14 +212,14 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Acțiuni rapide</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => handleQuickAction('generate-plan')}
             className="flex items-center justify-center space-x-2 h-16"
           >
             <Plus className="h-5 w-5" />
-            <span>New Marketing Plan</span>
+            <span>Plan de marketing nou</span>
           </Button>
           
           <Button
@@ -228,7 +228,7 @@ export default function Dashboard() {
             className="flex items-center justify-center space-x-2 h-16"
           >
             <Zap className="h-5 w-5" />
-            <span>Quick Social Post</span>
+            <span>Postare rapidă</span>
           </Button>
           
           <Button
@@ -237,7 +237,7 @@ export default function Dashboard() {
             className="flex items-center justify-center space-x-2 h-16"
           >
             <TrendingUp className="h-5 w-5" />
-            <span>Email Campaign</span>
+            <span>Campanie email</span>
           </Button>
           
           <Button
@@ -246,7 +246,7 @@ export default function Dashboard() {
             className="flex items-center justify-center space-x-2 h-16"
           >
             <Calendar className="h-5 w-5" />
-            <span>Blog Post</span>
+            <span>Articol blog</span>
           </Button>
         </div>
       </Card>
@@ -254,9 +254,9 @@ export default function Dashboard() {
       {/* Recent Plans */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Marketing Plans</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Planuri de marketing recente</h2>
           <Button variant="outline" size="sm">
-            View All
+            Vezi toate
           </Button>
         </div>
         
@@ -280,10 +280,10 @@ export default function Dashboard() {
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {plan.status}
+                    {plan.status === 'active' ? 'activ' : plan.status}
                   </span>
                   <Button variant="outline" size="sm">
-                    View
+                    Vezi
                   </Button>
                 </div>
               </div>
@@ -293,14 +293,14 @@ export default function Dashboard() {
           <div className="text-center py-8">
             <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No marketing plans yet
+              Încă nu ai planuri de marketing
             </h3>
             <p className="text-gray-600 mb-4">
-              Create your first marketing plan to get started.
+              Creează primul tău plan de marketing pentru a începe.
             </p>
             <Button onClick={() => setShowGenerator(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Marketing Plan
+              Creează plan de marketing
             </Button>
           </div>
         )}
