@@ -754,13 +754,13 @@ export const Dashboard: React.FC = () => {
       </Card>
     </div>
 
-    {/* Quick Content Generator Modal */}
-    {brandProfile && (
-      <QuickContentGenerator
-        isOpen={showQuickGenerator}
-        onClose={() => setShowQuickGenerator(false)}
-        brandProfile={brandProfile}
-      />
-    )}
-  );
+     {/* Quick Content Generator Modal */}
+     {brandProfile && (
+       <QuickContentGenerator
+         isOpen={showQuickGenerator}
+         onClose={() => setShowQuickGenerator(false)}
+         brandProfile={brandProfile}
+       />
+     )}
+
 };
