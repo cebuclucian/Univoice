@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Card } from '../components/ui/Card';
@@ -42,6 +43,7 @@ interface MarketingPlan {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentPlans, setRecentPlans] = useState<MarketingPlan[]>([]);
   const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
@@ -127,6 +129,10 @@ export default function Dashboard() {
       setQuickGeneratorFocus(type);
       setShowQuickGenerator(true);
     }
+  };
+
+  const handleViewPlan = (planId: string) => {
+    navigate(`/app/plans?view=${planId}`);
   };
 
   if (loading) {
@@ -282,7 +288,11 @@ export default function Dashboard() {
                   }`}>
                     {plan.status === 'active' ? 'activ' : plan.status}
                   </span>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewPlan(plan.id)}
+                  >
                     Vezi
                   </Button>
                 </div>

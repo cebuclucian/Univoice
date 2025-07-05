@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Target, Calendar, Eye, Edit3, Trash2, Filter, Search, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -28,6 +29,7 @@ type ViewMode = 'list' | 'generator' | 'details';
 
 export const MarketingPlans: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
   const [marketingPlans, setMarketingPlans] = useState<MarketingPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,12 +38,23 @@ export const MarketingPlans: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<MarketingPlan | null>(null);
 
   useEffect(() => {
-    // Check if we should open the generator directly
-    const urlParams = new URLSearchParams(location.search);
-    if (urlParams.get('action') === 'generate') {
+    // Check URL parameters for actions
+    const action = searchParams.get('action');
+    const viewPlanId = searchParams.get('view');
+    
+    if (action === 'generate') {
       setViewMode('generator');
+    } else if (viewPlanId) {
+      // Find and display the specific plan
+      const plan = marketingPlans.find(p => p.id === viewPlanId);
+      if (plan) {
+        setSelectedPlan(plan);
+        setViewMode('details');
+      }
     }
+  }, [searchParams, marketingPlans]);
 
+  useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
 
