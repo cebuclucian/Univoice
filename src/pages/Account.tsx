@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Calendar, Crown, Settings, Shield, Bell, CreditCard, Edit3, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -26,22 +27,13 @@ interface BrandProfile {
   updated_at: string;
 }
 
-interface Subscription {
-  id: string;
-  plan: string | null;
-  status: string | null;
-  stripe_customer_id: string | null;
-  plans_generated_this_month: number | null;
-  content_generated_this_month: number | null;
-}
-
 export const Account: React.FC = () => {
   const { user, signOut } = useAuth();
+  const { subscription, getCurrentPlan, isActive, getCurrentPeriodEnd, getPaymentMethod } = useSubscription();
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -101,16 +93,6 @@ export const Account: React.FC = () => {
           setBrandProfile(brandData);
         }
 
-        // Fetch subscription
-        const { data: subscriptionData, error: subscriptionError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (subscriptionData && !subscriptionError) {
-          setSubscription(subscriptionData);
-        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
@@ -196,14 +178,9 @@ export const Account: React.FC = () => {
     );
   }
 
-  const planLimits = {
-    free: { plans: 5, content: 50 },
-    pro: { plans: 50, content: 500 },
-    premium: { plans: 200, content: 2000 }
-  };
-
-  const currentPlan = subscription?.plan || 'free';
-  const limits = planLimits[currentPlan as keyof typeof planLimits];
+  const currentPlan = getCurrentPlan();
+  const paymentMethod = getPaymentMethod();
+  const periodEnd = getCurrentPeriodEnd();
 
   const tabs = [
     { id: 'profile', name: 'Profil', icon: User },
@@ -417,10 +394,24 @@ export const Account: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">Plan {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</h3>
-                  <p className="text-gray-600">
-                    {subscription?.plans_generated_this_month || 0}
-                    {limits.plans > 0 ? `/${limits.plans}` : '/∞'} planuri folosite luna aceasta
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-gray-600">
+                      {isActive() ? 'Abonament activ' : 'Abonament inactiv'}
+                    </p>
+                    {periodEnd && (
+                      <p className="text-sm text-gray-500">
+                        {subscription?.cancel_at_period_end 
+                          ? `Se anulează pe ${periodEnd.toLocaleDateString('ro-RO')}`
+                          : `Se reînnoiește pe ${periodEnd.toLocaleDateString('ro-RO')}`
+                        }
+                      </p>
+                    )}
+                    {paymentMethod && (
+                      <p className="text-sm text-gray-500">
+                        {paymentMethod.brand.toUpperCase()} •••• {paymentMethod.last4}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
               {currentPlan !== 'free' && (

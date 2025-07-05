@@ -2,48 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { useSubscription } from '../hooks/useSubscription';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SubscriptionPlans } from '../components/SubscriptionPlans';
 
 export const Pricing: React.FC = () => {
   const { user } = useAuth();
+  const { getCurrentPlan, loading } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [currentPlan, setCurrentPlan] = useState<string>('free');
-  const [loading, setLoading] = useState(true);
 
   // Check for success/cancel parameters
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
 
-  useEffect(() => {
-    const fetchCurrentPlan = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('plan, status')
-          .eq('id', user.id)
-          .single();
-
-        if (data && !error) {
-          setCurrentPlan(data.plan || 'free');
-        }
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCurrentPlan();
-  }, [user]);
+  const currentPlan = getCurrentPlan();
 
   if (loading) {
     return (

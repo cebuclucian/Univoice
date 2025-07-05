@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Crown, Check, Zap, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { STRIPE_PLANS, type StripePlan } from '../lib/stripe';
+import { STRIPE_PRODUCTS, type StripeProduct } from '../stripe-config';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 interface SubscriptionPlansProps {
   currentPlan?: string;
-  onPlanSelect?: (plan: StripePlan) => void;
+  onPlanSelect?: (plan: StripeProduct) => void;
   showCurrentPlan?: boolean;
 }
 
@@ -20,16 +20,17 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleSelectPlan = async (planKey: StripePlan) => {
+  const handleSelectPlan = async (planKey: StripeProduct) => {
     if (!user) return;
 
     setLoading(planKey);
     try {
-      // Call Stripe checkout function
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      const product = STRIPE_PRODUCTS[planKey];
+      
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
-          user_id: user.id,
-          price_id: STRIPE_PLANS[planKey].id,
+          price_id: product.priceId,
+          mode: product.mode,
           success_url: `${window.location.origin}/app/account?success=true`,
           cancel_url: `${window.location.origin}/app/account?canceled=true`
         }
@@ -79,12 +80,12 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       key: 'free' as const,
       name: 'Gratuit',
       price: 0,
-      currency: 'RON',
+      currency: 'EUR',
       interval: 'month',
       description: 'Perfect pentru a începe',
       features: [
         '5 planuri de marketing pe lună',
-        '50 conținuturi generate',
+        '25 conținuturi generate',
         'Definirea vocii brandului',
         'Suport comunitate'
       ],
@@ -92,18 +93,25 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       color: 'gray'
     },
     {
-      key: 'pro' as StripePlan,
-      ...STRIPE_PLANS.pro,
-      description: 'Pentru afaceri în creștere',
-      popular: true,
+      key: 'basic' as StripeProduct,
+      ...STRIPE_PRODUCTS.basic,
+      interval: 'month',
+      popular: false,
       color: 'blue'
     },
     {
-      key: 'premium' as StripePlan,
-      ...STRIPE_PLANS.premium,
-      description: 'Pentru agenții și companii mari',
-      popular: false,
+      key: 'pro' as StripeProduct,
+      ...STRIPE_PRODUCTS.pro,
+      interval: 'month',
+      popular: true,
       color: 'purple'
+    },
+    {
+      key: 'enterprise' as StripeProduct,
+      ...STRIPE_PRODUCTS.enterprise,
+      interval: 'month',
+      popular: false,
+      color: 'indigo'
     }
   ];
 
@@ -120,13 +128,13 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
         {plans.map((plan, index) => (
           <Card
             key={plan.key}
             className={`relative shadow-lg hover:shadow-xl transition-all duration-300 ${
               plan.popular 
-                ? 'border-2 border-blue-500 transform scale-105' 
+                ? 'border-2 border-purple-500 transform scale-105' 
                 : 'border border-gray-200'
             } ${currentPlan === plan.key ? 'ring-2 ring-green-500' : ''}`}
             animation="scaleIn"
@@ -136,7 +144,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             {/* Popular Badge */}
             {plan.popular && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
+                <div className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
                   <Star className="h-4 w-4" />
                   <span>Cel mai popular</span>
                 </div>
@@ -157,17 +165,20 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               <div className="text-center mb-8">
                 <div className={`p-3 rounded-2xl mb-4 inline-block ${
                   plan.color === 'blue' ? 'bg-blue-100' :
-                  plan.color === 'purple' ? 'bg-purple-100' : 'bg-gray-100'
+                  plan.color === 'purple' ? 'bg-purple-100' :
+                  plan.color === 'indigo' ? 'bg-indigo-100' : 'bg-gray-100'
                 }`}>
                   {plan.key === 'free' ? (
                     <Zap className={`h-8 w-8 ${
                       plan.color === 'blue' ? 'text-blue-600' :
-                      plan.color === 'purple' ? 'text-purple-600' : 'text-gray-600'
+                      plan.color === 'purple' ? 'text-purple-600' :
+                      plan.color === 'indigo' ? 'text-indigo-600' : 'text-gray-600'
                     }`} />
                   ) : (
                     <Crown className={`h-8 w-8 ${
                       plan.color === 'blue' ? 'text-blue-600' :
-                      plan.color === 'purple' ? 'text-purple-600' : 'text-gray-600'
+                      plan.color === 'purple' ? 'text-purple-600' :
+                      plan.color === 'indigo' ? 'text-indigo-600' : 'text-gray-600'
                     }`} />
                   )}
                 </div>
@@ -188,7 +199,8 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                   <div key={featureIndex} className="flex items-start space-x-3">
                     <Check className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
                       plan.color === 'blue' ? 'text-blue-600' :
-                      plan.color === 'purple' ? 'text-purple-600' : 'text-green-600'
+                      plan.color === 'purple' ? 'text-purple-600' :
+                      plan.color === 'indigo' ? 'text-indigo-600' : 'text-green-600'
                     }`} />
                     <span className="text-gray-700">{feature}</span>
                   </div>
@@ -222,10 +234,12 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                   <Button
                     className={`w-full ${
                       plan.popular 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        ? 'bg-purple-600 hover:bg-purple-700' 
                         : plan.key === 'free'
                         ? 'bg-gray-600 hover:bg-gray-700'
-                        : 'bg-purple-600 hover:bg-purple-700'
+                        : plan.color === 'blue'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
                     }`}
                     onClick={() => plan.key !== 'free' ? handleSelectPlan(plan.key) : undefined}
                     loading={loading === plan.key}
