@@ -112,7 +112,7 @@ export const useUserStats = () => {
     try {
       const { error } = await supabase
         .rpc('increment_content_generated', { 
-          input_user_id: user.id, 
+          user_id: user.id, 
           amount 
         });
 
