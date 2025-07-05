@@ -268,7 +268,7 @@ export const Dashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Bună dimineața{brandProfile ? `, ${brandProfile.brand_name}` : ''}! 👋
+                Bună{brandProfile ? `, ${brandProfile.brand_name}` : ''}! 👋
               </h1>
               <p className="text-gray-600">
                 {brandProfile 
