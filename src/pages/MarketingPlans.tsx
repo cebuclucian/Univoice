@@ -36,6 +36,12 @@ export const MarketingPlans: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<MarketingPlan | null>(null);
 
   useEffect(() => {
+    // Check if we should open the generator directly
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('action') === 'generate') {
+      setViewMode('generator');
+    }
+
     const fetchData = async () => {
       if (!user) return;
 

@@ -152,10 +152,6 @@ export const Dashboard: React.FC = () => {
     setBrandProfile(updatedProfile);
   };
 
-  const handleCreateNewPlan = () => {
-    navigate('/app/plans');
-  };
-
   const handleViewPlan = (planId: string) => {
     navigate(`/app/plans?view=${planId}`);
   };
@@ -285,7 +281,7 @@ export const Dashboard: React.FC = () => {
                 <Button 
                   size="lg" 
                   className="flex items-center space-x-2 micro-bounce"
-                  onClick={handleCreateNewPlan}
+                  onClick={() => navigate('/app/plans?action=generate')}
                 >
                   <Plus className="h-5 w-5" />
                   <span>Plan de marketing nou</span>
@@ -507,7 +503,7 @@ export const Dashboard: React.FC = () => {
               <Button 
                 size="sm" 
                 className="flex items-center space-x-2 micro-bounce"
-                onClick={handleCreateNewPlan}
+                onClick={() => navigate('/app/plans?action=generate')}
               >
                 <Plus className="h-4 w-4" />
                 <span>Nou</span>
@@ -541,7 +537,7 @@ export const Dashboard: React.FC = () => {
               <p className="text-gray-600 mb-4 text-sm">Creează primul tău plan de marketing</p>
               <Button 
                 className="flex items-center space-x-2 micro-bounce"
-                onClick={handleCreateNewPlan}
+                onClick={() => navigate('/app/plans?action=generate')}
               >
                 <Sparkles className="h-4 w-4" />
                 <span>Creează primul plan</span>
