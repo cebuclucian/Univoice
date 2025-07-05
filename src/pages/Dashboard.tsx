@@ -48,6 +48,8 @@ export const Dashboard: React.FC = () => {
   const [marketingPlans, setMarketingPlans] = useState<MarketingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showQuickGenerator, setShowQuickGenerator] = useState(false);
+  const [quickGeneratorFocus, setQuickGeneratorFocus] = useState<string | null>(null);
   const { user } = useAuth();
   const { t } = useTranslation();
   const { stats } = useUserStats();
@@ -150,6 +152,21 @@ export const Dashboard: React.FC = () => {
 
   const handleBrandProfileUpdated = (updatedProfile: BrandProfile) => {
     setBrandProfile(updatedProfile);
+  };
+
+  const handleCreateSustainabilityContent = () => {
+    setQuickGeneratorFocus('sustainability');
+    setShowQuickGenerator(true);
+  };
+
+  const handleScheduleOptimalPosts = () => {
+    // TODO: Implementare în următoarea fază
+    console.log('Schedule optimal posts - coming soon');
+  };
+
+  const handleCreateVideoContent = () => {
+    // TODO: Implementare în următoarea fază  
+    console.log('Create video content - coming soon');
   };
 
   const handleViewPlan = (planId: string) => {
@@ -648,7 +665,20 @@ export const Dashboard: React.FC = () => {
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 mb-1">{recommendation.title}</h4>
                         <p className="text-gray-600 text-sm mb-3">{recommendation.description}</p>
-                        <Button size="sm" variant="outline" className="micro-bounce">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="micro-bounce"
+                          onClick={() => {
+                            if (recommendation.action === 'Creează conținut') {
+                              handleCreateSustainabilityContent();
+                            } else if (recommendation.action === 'Programează postări') {
+                              handleScheduleOptimalPosts();
+                            } else if (recommendation.action === 'Creează video') {
+                              handleCreateVideoContent();
+                            }
+                          }}
+                        >
                           {recommendation.action}
                           <ArrowRight className="h-3 w-3 ml-1" />
                         </Button>
@@ -743,5 +773,18 @@ export const Dashboard: React.FC = () => {
         </div>
       </Card>
     </div>
+
+    {/* Quick Content Generator Modal */}
+    {brandProfile && (
+      <QuickContentGenerator
+        isOpen={showQuickGenerator}
+        onClose={() => {
+          setShowQuickGenerator(false);
+          setQuickGeneratorFocus(null);
+        }}
+        brandProfile={brandProfile}
+        focusType={quickGeneratorFocus}
+      />
+    )}
   );
 };

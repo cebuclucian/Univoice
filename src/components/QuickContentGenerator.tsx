@@ -50,7 +50,8 @@ const contentTypes = [
 export const QuickContentGenerator: React.FC<QuickContentGeneratorProps> = ({
   isOpen,
   onClose,
-  brandProfile
+  brandProfile,
+  focusType = null
 }) => {
   const { user } = useAuth();
   const { stats, incrementContentCounter } = useUserStats();
@@ -99,6 +100,20 @@ export const QuickContentGenerator: React.FC<QuickContentGeneratorProps> = ({
 
         const prompt = `
 Creează o postare ${typeInfo?.name.toLowerCase()} pentru ${platformInfo?.name} pentru brandul "${brandProfile.brand_name}".
+
+${focusType === 'sustainability' ? `
+FOCUS SPECIAL: SUSTENABILITATE
+Această postare trebuie să se concentreze pe aspecte de sustenabilitate relevante pentru brandul "${brandProfile.brand_name}". 
+Integrează natural concepte precum:
+- Responsabilitate ecologică
+- Practici sustenabile în business
+- Impact pozitiv asupra mediului
+- Consum responsabil
+- Inovații verzi
+- Comunitate și responsabilitate socială
+
+Fă legătura între sustenabilitate și activitatea brandului într-un mod autentic și credibil.
+` : ''}
 
 INFORMAȚII BRAND:
 - Nume: ${brandProfile.brand_name}
@@ -361,7 +376,12 @@ Generat de Univoice`;
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Generează conținut rapid</h2>
-              <p className="text-gray-600">Creează postări personalizate pentru {brandProfile.brand_name}</p>
+              <p className="text-gray-600">
+                {focusType === 'sustainability' 
+                  ? `Creează conținut despre sustenabilitate pentru ${brandProfile.brand_name}`
+                  : `Creează postări personalizate pentru ${brandProfile.brand_name}`
+                }
+              </p>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
@@ -398,6 +418,24 @@ Generat de Univoice`;
         {/* Setup Step */}
         {step === 'setup' && (
           <div className="space-y-8">
+            {/* Focus Type Notice */}
+            {focusType === 'sustainability' && (
+              <Card className="bg-green-50 border-green-200" padding="md">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Target className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-green-900">Focus: Conținut despre sustenabilitate</h4>
+                    <p className="text-sm text-green-700">
+                      Conținutul generat va integra aspecte de sustenabilitate relevante pentru brandul tău.
+                      Platformele și tipurile de conținut au fost pre-selectate pentru impact maxim.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Platform Selection */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Selectează platformele</h3>
