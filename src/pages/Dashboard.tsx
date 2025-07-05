@@ -15,6 +15,7 @@ import { SkeletonLoader, CardSkeleton } from '../components/ui/SkeletonLoader';
 import { LazyWrapper, LazyBrandVoiceAnalysis, AnalysisSkeleton } from '../components/LazyComponents';
 import { UsageStats } from '../components/UsageStats';
 import { BrandVoiceHistory } from '../components/BrandVoiceHistory';
+import { QuickContentGenerator } from '../components/QuickContentGenerator';
 
 interface BrandProfile {
   id: string;
@@ -48,6 +49,7 @@ export const Dashboard: React.FC = () => {
   const [marketingPlans, setMarketingPlans] = useState<MarketingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showQuickGenerator, setShowQuickGenerator] = useState(false);
   const { user } = useAuth();
   const { t } = useTranslation();
   const { stats } = useUserStats();
@@ -292,7 +294,7 @@ export const Dashboard: React.FC = () => {
                 </Button>
                 <Button variant="outline" size="lg" className="flex items-center space-x-2 micro-bounce">
                   <Zap className="h-5 w-5" />
-                  <span>Generează conținut rapid</span>
+                  <span onClick={() => setShowQuickGenerator(true)}>Generează conținut rapid</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -751,5 +753,14 @@ export const Dashboard: React.FC = () => {
         </div>
       </Card>
     </div>
+
+    {/* Quick Content Generator Modal */}
+    {brandProfile && (
+      <QuickContentGenerator
+        isOpen={showQuickGenerator}
+        onClose={() => setShowQuickGenerator(false)}
+        brandProfile={brandProfile}
+      />
+    )}
   );
 };
